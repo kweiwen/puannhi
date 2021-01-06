@@ -24,6 +24,7 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
 {
     addParameter (mGain        = new juce::AudioParameterFloat ("gain", "Gain", 0.000f, 1.0f, 0.5f));
     addParameter (mTime        = new juce::AudioParameterFloat ("time", "Time", 0.001f, 1.0f, 0.5f));
+    addParameter (mMix         = new juce::AudioParameterFloat ("mix",  "Mix",  0.001f, 1.0f, 0.5f));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -106,6 +107,9 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         
         mTimeCtrlSmooth.push_back(ParamSmooth());
         mTimeCtrlSmooth[index].createCoefficients(sampleRate/100, sampleRate);
+        
+        mMixCtrlSmooth.push_back(ParamSmooth());
+        mMixCtrlSmooth[index].createCoefficients(sampleRate/100, sampleRate);
     }
 }
 
@@ -169,9 +173,11 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             // ..do something to the data...
             auto drySignal = channelData[sample];
             mCircularBuffer[channel].writeBuffer(channelData[sample]);
-            auto delaySample = mTimeCtrlSmooth[channel].process(mTime->get());
+            auto timeCtrl = mTimeCtrlSmooth[channel].process(mTime->get());
+            auto wetSignal = mCircularBuffer[channel].readBuffer(timeCtrl * getSampleRate()) * mGain->get();
             
-            channelData[sample] = mCircularBuffer[channel].readBuffer(delaySample * getSampleRate()) * mGain->get() + drySignal;
+            auto mixCtrl = mMixCtrlSmooth[channel].process(mMix->get());
+            channelData[sample] = wetSignal * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }
 }
