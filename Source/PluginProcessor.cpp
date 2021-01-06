@@ -105,11 +105,11 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         mCircularBuffer[index].createCircularBuffer(sampleRate);
         mCircularBuffer[index].flushBuffer();
         
-        mTimeCtrlSmooth.push_back(ParamSmooth());
-        mTimeCtrlSmooth[index].createCoefficients(sampleRate/100, sampleRate);
+        mTimeCtrl.push_back(ParameterSmooth());
+        mTimeCtrl[index].createCoefficients(sampleRate/100, sampleRate);
         
-        mMixCtrlSmooth.push_back(ParamSmooth());
-        mMixCtrlSmooth[index].createCoefficients(sampleRate/100, sampleRate);
+        mMixCtrl.push_back(ParameterSmooth());
+        mMixCtrl[index].createCoefficients(sampleRate/100, sampleRate);
     }
 }
 
@@ -149,7 +149,6 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-
     // In case we have more outputs than inputs, this code clears any output
     // channels that didn't contain input data, (because these aren't
     // guaranteed to be empty - they may contain garbage).
@@ -173,10 +172,10 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             // ..do something to the data...
             auto drySignal = channelData[sample];
             mCircularBuffer[channel].writeBuffer(channelData[sample]);
-            auto timeCtrl = mTimeCtrlSmooth[channel].process(mTime->get());
+            auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
             auto wetSignal = mCircularBuffer[channel].readBuffer(timeCtrl * getSampleRate()) * mGain->get();
             
-            auto mixCtrl = mMixCtrlSmooth[channel].process(mMix->get());
+            auto mixCtrl = mMixCtrl[channel].process(mMix->get());
             channelData[sample] = wetSignal * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }

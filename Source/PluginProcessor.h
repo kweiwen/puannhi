@@ -10,7 +10,7 @@
 
 #include <JuceHeader.h>
 #include "CircularBuffer.h"
-#include "ParamSmooth.h"
+#include "ParameterSmooth.h"
 
 //==============================================================================
 /**
@@ -61,8 +61,8 @@ public:
 private:
 //    CircularBuffer<float>* _mCircularBuffer;
     std::unique_ptr<CircularBuffer<double>[]> mCircularBuffer;
-    std::vector<ParamSmooth> mTimeCtrlSmooth;
-    std::vector<ParamSmooth> mMixCtrlSmooth;
+    std::vector<ParameterSmooth> mTimeCtrl;
+    std::vector<ParameterSmooth> mMixCtrl;
     juce::AudioParameterFloat* mGain;
     juce::AudioParameterFloat* mTime;
     juce::AudioParameterFloat* mMix;

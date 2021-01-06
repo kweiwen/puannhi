@@ -1,24 +1,24 @@
 //
-//  ParaSmooth.h
+//  ParameterSmooth.h
 //
 //  Created by kweiwen tseng on 2020/6/25.
 //
 
-#ifndef ParamSmooth_h
-#define ParamSmooth_h
+#ifndef ParameterSmooth_h
+#define ParameterSmooth_h
 
 const float c_twoPi = 6.283185307179586476925286766559f;
 
-class ParamSmooth
+class ParameterSmooth
 {
 
 public:
-    ParamSmooth()
+    ParameterSmooth()
     {
         
     }
     
-    ~ParamSmooth()
+    ~ParameterSmooth()
     {
     }
     
@@ -36,7 +36,7 @@ private:
     float mSmoothingTimeInMs;
 };
 
-void ParamSmooth::createCoefficients(float smoothingTimeInMs, float sampleRate)
+void ParameterSmooth::createCoefficients(float smoothingTimeInMs, float sampleRate)
 {
     a = exp(-c_twoPi / (smoothingTimeInMs * 0.001f * sampleRate));
     b = 1.0f - a;
@@ -46,20 +46,20 @@ void ParamSmooth::createCoefficients(float smoothingTimeInMs, float sampleRate)
     mSmoothingTimeInMs = smoothingTimeInMs;
 }
 
-float ParamSmooth::getSampleRate()
+float ParameterSmooth::getSampleRate()
 {
     return mSampleRate;
 }
 
-float ParamSmooth::getSmoothingTimeInMs()
+float ParameterSmooth::getSmoothingTimeInMs()
 {
     return mSmoothingTimeInMs;
 }
 
-float ParamSmooth::process(float input)
+float ParameterSmooth::process(float input)
 {
     z = (input * b) + (z * a);
     return z;
 }
 
-#endif /* ParamSmooth_h */
+#endif /* ParameterSmooth_h */
