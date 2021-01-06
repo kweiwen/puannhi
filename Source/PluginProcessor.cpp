@@ -22,9 +22,9 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
                        )
 #endif
 {
-    addParameter (mGain        = new juce::AudioParameterFloat ("gain", "Gain", 0.000f, 1.0f, 0.5f));
-    addParameter (mTime        = new juce::AudioParameterFloat ("time", "Time", 0.001f, 1.0f, 0.5f));
-    addParameter (mMix         = new juce::AudioParameterFloat ("mix",  "Mix",  0.001f, 1.0f, 0.5f));
+    addParameter (mGain        = new juce::AudioParameterFloat ("gain", "Gain", 0.00f, 1.00f, 0.50f));
+    addParameter (mTime        = new juce::AudioParameterFloat ("time", "Time", 0.01f, 1.00f, 0.50f));
+    addParameter (mMix         = new juce::AudioParameterFloat ("mix",  "Mix",  0.01f, 1.00f, 0.50f));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
