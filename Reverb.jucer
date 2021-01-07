@@ -9,7 +9,8 @@
     <GROUP id="{BBE079E4-F94F-7485-161A-6A2032B74FBE}" name="Source">
       <FILE id="EUPXSJ" name="CircularBuffer.h" compile="0" resource="0"
             file="Source/CircularBuffer.h"/>
-      <FILE id="l0wRtK" name="ParamSmooth.h" compile="0" resource="0" file="Source/ParamSmooth.h"/>
+      <FILE id="bzBkWH" name="ParameterSmooth.h" compile="0" resource="0"
+            file="Source/ParameterSmooth.h"/>
       <FILE id="yZ4cYp" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="EvlR3c" name="PluginProcessor.h" compile="0" resource="0"
