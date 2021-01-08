@@ -61,9 +61,10 @@ public:
 private:
 //    CircularBuffer<float>* _mCircularBuffer;
     std::unique_ptr<CircularBuffer<double>[]> mCircularBuffer;
+    std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
     std::vector<ParameterSmooth> mMixCtrl;
-    juce::AudioParameterFloat* mGain;
+    juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mTime;
     juce::AudioParameterFloat* mMix;
     //==============================================================================

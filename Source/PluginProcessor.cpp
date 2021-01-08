@@ -22,9 +22,9 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
                        )
 #endif
 {
-    addParameter (mGain        = new juce::AudioParameterFloat ("gain", "Gain", 0.00f, 1.00f, 0.50f));
-    addParameter (mTime        = new juce::AudioParameterFloat ("time", "Time", 0.01f, 1.00f, 0.50f));
-    addParameter (mMix         = new juce::AudioParameterFloat ("mix",  "Mix",  0.01f, 1.00f, 0.50f));
+    addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f, 1.00f, 0.50f));
+    addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f, 1.00f, 0.50f));
+    addParameter (mMix         = new juce::AudioParameterFloat ("mix",      "Mix",      0.01f, 1.00f, 0.50f));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -110,6 +110,9 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         
         mMixCtrl.push_back(ParameterSmooth());
         mMixCtrl[index].createCoefficients(sampleRate/100, sampleRate);
+        
+        mFeedbackCtrl.push_back(ParameterSmooth());
+        mFeedbackCtrl[index].createCoefficients(sampleRate/100, sampleRate);
     }
 }
 
@@ -170,12 +173,18 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
         {
             // ..do something to the data...
-            auto drySignal = channelData[sample];
-            mCircularBuffer[channel].writeBuffer(channelData[sample]);
-            auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
-            auto wetSignal = mCircularBuffer[channel].readBuffer(timeCtrl * getSampleRate()) * mGain->get();
             
+            // start to smooth the parameter control
+            auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
+            auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
+            // load dry signal from channelData
+            auto drySignal = channelData[sample];
+            // read wet signal from delay line
+            auto wetSignal = mCircularBuffer[channel].readBuffer(timeCtrl * getSampleRate());
+            // sum up the dry signal + wet signal and write in the dely line
+            mCircularBuffer[channel].writeBuffer(drySignal + wetSignal * feedbackCtrl);
+            // adjust the dry and wet portion here
             channelData[sample] = wetSignal * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }
