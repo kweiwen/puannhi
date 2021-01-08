@@ -75,7 +75,7 @@ void CircularBuffer<T>::writeBuffer(T input)
 template<typename T>
 T CircularBuffer<T>::readBuffer(int delayInSamples)
 {
-    int readIndex = mWriteIndex - delayInSamples - 1;
+    int readIndex = mWriteIndex - delayInSamples;
     readIndex &= mWrapMask;
     return mBuffer[readIndex];
 }
