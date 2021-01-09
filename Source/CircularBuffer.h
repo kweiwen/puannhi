@@ -1,7 +1,9 @@
 //
 //  CircularBuffer.h
+//  CircularBuffer
 //
-//  Created by kweiwen tseng on 2020/6/25.
+//  Created by kweiwen tseng on 2021/1/10.
+//  Copyright © 2021 Sikhaa Electronics. All rights reserved.
 //
 
 #ifndef CircularBuffer_h
