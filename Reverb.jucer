@@ -11,7 +11,9 @@
             file="Source/CircularBuffer.h"/>
       <FILE id="tGj20S" name="DelayAPF.h" compile="0" resource="0" file="Source/DelayAPF.h"/>
       <FILE id="QiG7zp" name="DelayFeedback.h" compile="0" resource="0" file="Source/DelayFeedback.h"/>
-      <FILE id="bzBkWH" name="ParameterSmooth.h" compile="0" resource="0"
+      <FILE id="o3Wsdk" name="ParameterSmooth.cpp" compile="1" resource="0"
+            file="Source/ParameterSmooth.cpp"/>
+      <FILE id="gq11Ap" name="ParameterSmooth.h" compile="0" resource="0"
             file="Source/ParameterSmooth.h"/>
       <FILE id="yZ4cYp" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
