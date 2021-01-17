@@ -99,11 +99,12 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     
-    mCircularBuffer.reset(new CircularBuffer<double>[getTotalNumInputChannels()]);
+    mCircularBuffer.reset(new DelayFeedback<float>[getTotalNumInputChannels()]);
+
     for (int index = 0; index < getTotalNumInputChannels(); index++)
     {
-        mCircularBuffer[index].createCircularBuffer(sampleRate);
-        mCircularBuffer[index].flushBuffer();
+        mCircularBuffer[index].digitalDelayLine.createCircularBuffer(sampleRate);
+        mCircularBuffer[index].digitalDelayLine.flushBuffer();
         
         mTimeCtrl.push_back(ParameterSmooth());
         mTimeCtrl[index].createCoefficients(sampleRate/100, sampleRate);
@@ -178,14 +179,16 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
             auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-            // load dry signal from channelData
-            auto drySignal = channelData[sample];
-            // read wet signal from delay line
-            auto wetSignal = mCircularBuffer[channel].readBuffer(timeCtrl * getSampleRate());
-            // sum up the dry signal + wet signal and write in the dely line
-            mCircularBuffer[channel].writeBuffer(drySignal + wetSignal * feedbackCtrl);
-            // adjust the dry and wet portion here
-            channelData[sample] = wetSignal * mixCtrl + drySignal * (1 - mixCtrl);
+            channelData[sample] = mCircularBuffer[channel].process(channelData[sample], timeCtrl * getSampleRate(), feedbackCtrl, mixCtrl);
+            
+//            // load dry signal from channelData
+//            auto drySignal = channelData[sample];
+//            // read wet signal from delay line
+//            auto wetSignal = mCircularBuffer[channel].readBuffer(timeCtrl * getSampleRate());
+//            // sum up the dry signal + wet signal and write in the dely line
+//            mCircularBuffer[channel].writeBuffer(drySignal + wetSignal * feedbackCtrl);
+//            // adjust the dry and wet portion here
+//            channelData[sample] = wetSignal * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }
 }
@@ -198,7 +201,7 @@ bool CircularBufferAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* CircularBufferAudioProcessor::createEditor()
 {
-    //return new NewProjectAudioProcessorEditor (*this);
+//    return new NewProjectAudioProcessorEditor (*this);
     return nullptr;
 }
 

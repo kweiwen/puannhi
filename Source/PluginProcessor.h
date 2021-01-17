@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "CircularBuffer.h"
 #include "ParameterSmooth.h"
+#include "DelayFeedback.h"
 
 //==============================================================================
 /**
@@ -59,8 +60,8 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-//    CircularBuffer<float>* _mCircularBuffer;
-    std::unique_ptr<CircularBuffer<double>[]> mCircularBuffer;
+//    std::unique_ptr<CircularBuffer<double>[]> mCircularBuffer;
+    std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
     std::vector<ParameterSmooth> mMixCtrl;
