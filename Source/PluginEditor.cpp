@@ -19,7 +19,7 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (CircularBufferAu
 //    mGainSlider.setRange(0.0f, 1.0f, 0.01f);
 //    mGainSlider.setValue(0.5f);
 //    addAndMakeVisible(mGainSlider);
-    setSize (400, 300);
+    setSize (300, 300);
 }
 
 NewProjectAudioProcessorEditor::~NewProjectAudioProcessorEditor()
