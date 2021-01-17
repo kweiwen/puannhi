@@ -1,13 +1,13 @@
 //
 //  ParameterSmooth.h
+//  CircularBuffer
 //
 //  Created by kweiwen tseng on 2020/6/25.
+//  Copyright © 2021 Sikhaa Electronics. All rights reserved.
 //
 
 #ifndef ParameterSmooth_h
 #define ParameterSmooth_h
-
-const float c_twoPi = 6.283185307179586476925286766559f;
 
 class ParameterSmooth
 {
@@ -29,6 +29,7 @@ public:
     float process(float input);
     
 private:
+    const float c_twoPi = 6.283185307179586476925286766559f;
     float a;
     float b;
     float z;
