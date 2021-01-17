@@ -15,52 +15,32 @@ class ParameterSmooth
 public:
     ParameterSmooth()
     {
-        
-    }
+        a = 0;
+        b = 0;
+        z = 0;
+        mSampleRate = 0;
+        mSmoothingTimeInMs = 0;
+    };
     
     ~ParameterSmooth()
     {
-    }
+    };
     
     void createCoefficients(float smoothingTimeInMs, float samplingRate);
     
     float getSampleRate();
     float getSmoothingTimeInMs();
+    void setSampleRate(float input);
+    void setSmoothingTimeInMs(float input);
     float process(float input);
     
 private:
-    const float c_twoPi = 6.283185307179586476925286766559f;
+    float c_twoPi = 6.283185307179586476925286766559f;
     float a;
     float b;
     float z;
     float mSampleRate;
     float mSmoothingTimeInMs;
 };
-
-void ParameterSmooth::createCoefficients(float smoothingTimeInMs, float sampleRate)
-{
-    a = exp(-c_twoPi / (smoothingTimeInMs * 0.001f * sampleRate));
-    b = 1.0f - a;
-    z = 0.0f;
-    
-    mSampleRate = sampleRate;
-    mSmoothingTimeInMs = smoothingTimeInMs;
-}
-
-float ParameterSmooth::getSampleRate()
-{
-    return mSampleRate;
-}
-
-float ParameterSmooth::getSmoothingTimeInMs()
-{
-    return mSmoothingTimeInMs;
-}
-
-float ParameterSmooth::process(float input)
-{
-    z = (input * b) + (z * a);
-    return z;
-}
 
 #endif /* ParameterSmooth_h */
