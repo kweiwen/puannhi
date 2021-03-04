@@ -186,13 +186,13 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
 //==============================================================================
 bool CircularBufferAudioProcessor::hasEditor() const
 {
-    return false; // (change this to false if you choose to not supply an editor)
+    return true; // (change this to false if you choose to not supply an editor)
 }
 
 juce::AudioProcessorEditor* CircularBufferAudioProcessor::createEditor()
 {
-//    return new NewProjectAudioProcessorEditor (*this);
-    return nullptr;
+    return new NewProjectAudioProcessorEditor (*this);
+//    return nullptr;
 }
 
 //==============================================================================
