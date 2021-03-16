@@ -25,6 +25,8 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
     addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f, 1.00f, 0.50f));
     addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f, 1.00f, 0.50f));
     addParameter (mMix         = new juce::AudioParameterFloat ("mix",      "Mix",      0.01f, 1.00f, 0.50f));
+    addParameter (mFilter      = new juce::AudioParameterChoice("filter",   "Filter",   {"Low Pass", "Band Pass", "High Pass"}, 0));
+    
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
