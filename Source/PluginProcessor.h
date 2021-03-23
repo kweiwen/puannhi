@@ -62,13 +62,18 @@ public:
 private:
 //    std::unique_ptr<CircularBuffer<double>[]> mCircularBuffer;
     std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
+    std::vector<juce::IIRFilter> mFilter;
+    
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
     std::vector<ParameterSmooth> mMixCtrl;
+    std::vector<ParameterSmooth> mCutOffCtrl;
+
     juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mTime;
     juce::AudioParameterFloat* mMix;
-    juce::AudioParameterChoice* mFilter;
+    juce::AudioParameterFloat* mCutOff;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
 };

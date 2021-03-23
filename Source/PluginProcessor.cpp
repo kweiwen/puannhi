@@ -22,11 +22,10 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
                        )
 #endif
 {
-    addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f, 1.00f, 0.50f));
-    addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f, 1.00f, 0.50f));
-    addParameter (mMix         = new juce::AudioParameterFloat ("mix",      "Mix",      0.01f, 1.00f, 0.50f));
-    addParameter (mFilter      = new juce::AudioParameterChoice("filter",   "Filter",   {"Low Pass", "Band Pass", "High Pass"}, 0));
-    
+    addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
+    addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
+    addParameter (mMix         = new juce::AudioParameterFloat ("mix",      "Mix",      0.01f,  1.00f,      0.50f));
+    addParameter (mCutOff      = new juce::AudioParameterFloat ("cut-off",  "Cut-Off",  20.0f,  22000.0f,   1200.0f));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -109,13 +108,19 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         mCircularBuffer[index].digitalDelayLine.flushBuffer();
         
         mTimeCtrl.push_back(ParameterSmooth());
-        mTimeCtrl[index].createCoefficients(sampleRate/100, sampleRate);
+        mTimeCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
         
         mMixCtrl.push_back(ParameterSmooth());
-        mMixCtrl[index].createCoefficients(sampleRate/100, sampleRate);
+        mMixCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
         
         mFeedbackCtrl.push_back(ParameterSmooth());
-        mFeedbackCtrl[index].createCoefficients(sampleRate/100, sampleRate);
+        mFeedbackCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+
+        mCutOffCtrl.push_back(ParameterSmooth());
+        mCutOffCtrl[index].createCoefficients(sampleRate / 20000, sampleRate);
+
+        mFilter.push_back(juce::IIRFilter());
+        mFilter[index].setCoefficients(juce::IIRCoefficients::makeLowPass(sampleRate, 1200.0f, 1.0));
     }
 }
 
@@ -180,8 +185,17 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
             auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
+
             channelData[sample] = mCircularBuffer[channel].process(channelData[sample], timeCtrl * getSampleRate(), feedbackCtrl, mixCtrl);
         }
+
+        auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
+        if (cutOffCtrl != mCutOff->get())
+        {
+            mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), cutOffCtrl, 1.0));
+        }
+
+        mFilter[channel].processSamples(buffer.getWritePointer(channel), buffer.getNumSamples());
     }
 }
 
