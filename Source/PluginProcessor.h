@@ -76,7 +76,8 @@ private:
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mCutOff;
     juce::AudioParameterFloat* mSpeed;
-    juce::AudioParameterChoice* mType;
+    juce::AudioParameterChoice* mFilterType;
+    juce::AudioParameterChoice* mOscType;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
 };

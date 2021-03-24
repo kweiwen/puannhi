@@ -24,10 +24,11 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
 {
     //addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
     //addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
-    addParameter (mCutOff      = new juce::AudioParameterFloat  ("cut-off",  "Cut-Off",  20.0f,  2500.0f,    1200.0f));
-    addParameter (mSpeed       = new juce::AudioParameterFloat  ("speed",    "Speed",    0.1f,   20.0f,      4.0f));
-    addParameter (mMix         = new juce::AudioParameterFloat  ("mix",      "Mix",      0.01f,  1.00f,      0.50f));
-    addParameter (mType        = new juce::AudioParameterChoice ("type",     "Type",    {"LPF", "BPF", "HPF"}, 1));
+    addParameter (mCutOff      = new juce::AudioParameterFloat  ("cut-off",  "Frequency Cut-Off",   20.0f,  2500.0f,    1200.0f));
+    addParameter (mSpeed       = new juce::AudioParameterFloat  ("speed",    "Modulation Speed",    0.1f,   200.0f,      4.0f));
+    addParameter (mMix         = new juce::AudioParameterFloat  ("mix",      "Mixing",              0.01f,  1.00f,      0.50f));
+    addParameter (mFilterType  = new juce::AudioParameterChoice ("type",     "Filter Type",         {"LPF", "BPF", "HPF"}, 1));
+    addParameter (mOscType     = new juce::AudioParameterChoice ("osc",      "Oscillator Type",     {"Sine", "Triangle", "Sawtooth","Square","Trapezoid"}, 1));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -196,15 +197,8 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
 
             auto raw = channelData[sample];
             //channelData[sample] = mCircularBuffer[channel].process(channelData[sample], timeCtrl * getSampleRate(), feedbackCtrl, mixCtrl);
-            
-            auto modulation = modulator[channel].process(mSpeed->get(), getSampleRate());
+            auto modulation = modulator[channel].process(mSpeed->get(), getSampleRate(), mOscType->getIndex());
 
-            //if (cutOffCtrl != mCutOff->get())
-            //{
-            //    mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), cutOffCtrl, 1.0));
-            //}
-
-            //auto curoffFreqHz = juce::jmap(modulation, -1.0, 1.0, 0.0, 200.0);
             auto test = modulation * 400 + cutOffCtrl;
             if (test <= 20)
             {
