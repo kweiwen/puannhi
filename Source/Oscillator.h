@@ -9,6 +9,8 @@
 #ifndef Oscillator_h
 #define Oscillator_h
 
+#include <math.h>
+
 enum E_FILTER_TYPE
 {
 	E_SINE	    = 0,
@@ -23,25 +25,33 @@ class Oscillator
 public:
 	Oscillator()
 	{
+		currentAngle = 0;
 	};
 
 	~Oscillator()
 	{
 	};
 
-	/*float angleDelta(float frequency, float sampleRate);*/
-	double getAngleDelta(float frequency, float sampleRate);
+	double getAngleDelta(double frequency, double sampleRate);
+	double process(double frequency, double sampleRate);
+	double currentAngle;
+
 
 private:
 	double c_twoPi = 6.283185307179586476925286766559f;
-
 };
 
-inline double Oscillator::getAngleDelta(float frequency, float sampleRate)
+inline double Oscillator::getAngleDelta(double frequency, double sampleRate)
 {
 	auto angleDelta = c_twoPi * frequency / sampleRate;
 	return angleDelta;
 }
 
+inline double Oscillator::process(double frequency, double sampleRate)
+{
+	auto currentSample = sin(currentAngle);
+	currentAngle = currentAngle + c_twoPi* frequency / sampleRate;
+	return currentSample;
+}
 
 #endif /* Oscillator_h */

@@ -64,7 +64,6 @@ private:
     std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
     std::vector<juce::IIRFilter> mFilter;
     std::vector<Oscillator> modulator;
-    float currentAngle[2] = { 0.0, 0.0 };
     
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;

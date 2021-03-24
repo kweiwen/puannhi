@@ -118,10 +118,10 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         mFeedbackCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mCutOffCtrl.push_back(ParameterSmooth());
-        mCutOffCtrl[index].createCoefficients(sampleRate / 20000, sampleRate);
+        mCutOffCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mSpeedCtrl.push_back(ParameterSmooth());
-        mSpeedCtrl[index].createCoefficients(sampleRate / 20000, sampleRate);
+        mSpeedCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mFilter.push_back(juce::IIRFilter());
         mFilter[index].setCoefficients(juce::IIRCoefficients::makeLowPass(sampleRate, 1200.0f, 1.0));
@@ -192,19 +192,18 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
 
-            auto currentSample = (float)std::sin(currentAngle[channel]);
-            currentAngle[channel] = currentAngle[channel] + modulator[channel].getAngleDelta(mSpeed->get(), getSampleRate());
-            channelData[sample] = currentSample;
             //channelData[sample] = mCircularBuffer[channel].process(channelData[sample], timeCtrl * getSampleRate(), feedbackCtrl, mixCtrl);
+            
+            auto currentSample = modulator[channel].process(mSpeed->get(), getSampleRate());
+            channelData[sample] = currentSample;
+
+            auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
+            if (cutOffCtrl != mCutOff->get())
+            {
+                mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), cutOffCtrl, 1.0));
+            }
+            channelData[sample] = mFilter[channel].processSingleSampleRaw(channelData[sample]);
         }
-
-        //auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
-        //if (cutOffCtrl != mCutOff->get())
-        //{
-        //    mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), cutOffCtrl, 1.0));
-        //}
-
-        //mFilter[channel].processSamples(buffer.getWritePointer(channel), buffer.getNumSamples());
     }
 }
 
