@@ -12,6 +12,7 @@
 #include "CircularBuffer.h"
 #include "ParameterSmooth.h"
 #include "DelayFeedback.h"
+#include "Oscillator.h"
 
 //==============================================================================
 /**
@@ -60,20 +61,22 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-//    std::unique_ptr<CircularBuffer<double>[]> mCircularBuffer;
     std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
     std::vector<juce::IIRFilter> mFilter;
+    std::vector<Oscillator> modulator;
+    float currentAngle[2] = { 0.0, 0.0 };
     
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
     std::vector<ParameterSmooth> mMixCtrl;
     std::vector<ParameterSmooth> mCutOffCtrl;
+    std::vector<ParameterSmooth> mSpeedCtrl;
 
     juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mTime;
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mCutOff;
-
+    juce::AudioParameterFloat* mSpeed;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
 };

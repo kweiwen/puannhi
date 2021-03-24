@@ -11,8 +11,11 @@
             file="Source/CircularBuffer.h"/>
       <FILE id="tGj20S" name="DelayAPF.h" compile="0" resource="0" file="Source/DelayAPF.h"/>
       <FILE id="QiG7zp" name="DelayFeedback.h" compile="0" resource="0" file="Source/DelayFeedback.h"/>
+      <FILE id="E7sjpv" name="FilterDesigner.cpp" compile="1" resource="0"
+            file="Source/FilterDesigner.cpp"/>
       <FILE id="QDIxyz" name="FilterDesigner.h" compile="0" resource="0"
             file="Source/FilterDesigner.h"/>
+      <FILE id="sO8jkl" name="Oscillator.h" compile="0" resource="0" file="Source/Oscillator.h"/>
       <FILE id="o3Wsdk" name="ParameterSmooth.cpp" compile="1" resource="0"
             file="Source/ParameterSmooth.cpp"/>
       <FILE id="gq11Ap" name="ParameterSmooth.h" compile="0" resource="0"
