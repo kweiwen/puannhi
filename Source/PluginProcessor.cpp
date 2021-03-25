@@ -25,7 +25,7 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
     //addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
     //addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
     addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1200.0f));
-    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance",           0.1f,   18.0f,       0.5f));
+    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance", juce::NormalisableRange<float>(0.1f, 18.0f, 0.1f), 1.0f));
     addParameter (mSpeed       = new juce::AudioParameterInt    ("0x02",  "Modulation Speed",    1,      10,         1));
     addParameter (mAmount      = new juce::AudioParameterInt    ("0x03",  "Modulation Amount",   100,    1000,       100));
     addParameter (mMix         = new juce::AudioParameterFloat  ("0x04",  "Mixing",              0.01f,  1.00f,      0.50f));
@@ -231,12 +231,12 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             }
             mCoefficient.model = mFilterType->getIndex();
             mCoefficient.setParameter(test, getSampleRate(), mResonance->get(), 0.0, 0.0);
-            mFilter[channel].setCoefficients(juce::IIRCoefficients::IIRCoefficients(mCoefficient.getCoefficients()[0],
-                                                                                    mCoefficient.getCoefficients()[1],
-                                                                                    mCoefficient.getCoefficients()[2],
-                                                                                    mCoefficient.getCoefficients()[3],
-                                                                                    mCoefficient.getCoefficients()[4],
-                                                                                    mCoefficient.getCoefficients()[5]));
+            mFilter[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                                                                   mCoefficient.getCoefficients()[1],
+                                                                   mCoefficient.getCoefficients()[2],
+                                                                   mCoefficient.getCoefficients()[3],
+                                                                   mCoefficient.getCoefficients()[4],
+                                                                   mCoefficient.getCoefficients()[5]));
             //mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), test, 1.0));
             channelData[sample] = mFilter[channel].processSingleSampleRaw(channelData[sample]) * mixCtrl + raw * (1 - mixCtrl);
             //(NumericType b0, NumericType b1, NumericType b2, NumericType a0, NumericType a1, NumericType a2)
