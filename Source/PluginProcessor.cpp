@@ -25,7 +25,7 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
     //addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
     //addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
     addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1500.0f));
-    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance",           0.1f,   15.0f,      0.7f));
+    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance",           0.1f,   15.0f,      1.5f));
     addParameter (mSpeed       = new juce::AudioParameterInt    ("0x02",  "Modulation Speed",    1,      10,         2));
     addParameter (mAmount      = new juce::AudioParameterInt    ("0x03",  "Modulation Amount",   100,    1000,       800));
     addParameter (mMix         = new juce::AudioParameterFloat  ("0x04",  "Mixing",              0.01f,  1.00f,      0.50f));
