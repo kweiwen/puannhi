@@ -24,12 +24,12 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
 {
     //addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
     //addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
-    addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1200.0f));
-    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance", juce::NormalisableRange<float>(0.1f, 18.0f, 0.1f), 1.0f));
-    addParameter (mSpeed       = new juce::AudioParameterInt    ("0x02",  "Modulation Speed",    1,      10,         1));
-    addParameter (mAmount      = new juce::AudioParameterInt    ("0x03",  "Modulation Amount",   100,    1000,       100));
+    addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1500.0f));
+    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance",           0.1f,   15.0f,      0.7f));
+    addParameter (mSpeed       = new juce::AudioParameterInt    ("0x02",  "Modulation Speed",    1,      10,         2));
+    addParameter (mAmount      = new juce::AudioParameterInt    ("0x03",  "Modulation Amount",   100,    1000,       800));
     addParameter (mMix         = new juce::AudioParameterFloat  ("0x04",  "Mixing",              0.01f,  1.00f,      0.50f));
-    addParameter (mFilterType  = new juce::AudioParameterChoice ("0x05",  "Filter Type",         {"FLAT","LPF", "BPF", "HPF"}, 0));
+    addParameter (mFilterType  = new juce::AudioParameterChoice ("0x05",  "Filter Type",         {"FLAT","LPF", "BPF", "HPF"}, 1));
     addParameter (mOscType     = new juce::AudioParameterChoice ("0x06",  "Oscillator Type",     {"Sine", "Triangle", "Sawtooth","Trapezoid","Square"}, 0));
 }
 
