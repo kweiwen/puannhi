@@ -12,6 +12,7 @@
 #include "CircularBuffer.h"
 #include "ParameterSmooth.h"
 #include "DelayFeedback.h"
+#include "FilterDesigner.h"
 #include "Oscillator.h"
 
 //==============================================================================
@@ -64,6 +65,8 @@ private:
     std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
     std::vector<juce::IIRFilter> mFilter;
     std::vector<Oscillator> modulator;
+
+    FilterDesigner mCoefficient;
     
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;

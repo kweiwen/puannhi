@@ -46,7 +46,8 @@ public:
 	float* getCoefficients();
 
 private:
-	float c_twoPi = 6.283185307179586476925286766559f;
+	double TWO_PI = 6.283185307179586476925286766559;
+	double EULER = 2.71828182845904523536;
 
 	// numerator of transfer function
 	float b0 = 0;

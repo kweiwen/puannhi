@@ -24,11 +24,11 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
 {
     //addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
     //addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
-    addParameter (mCutOff      = new juce::AudioParameterFloat  ("cut-off",  "Frequency Cut-Off",   20.0f,  2500.0f,    1200.0f));
-    addParameter (mSpeed       = new juce::AudioParameterFloat  ("speed",    "Modulation Speed",    0.1f,   200.0f,      4.0f));
-    addParameter (mMix         = new juce::AudioParameterFloat  ("mix",      "Mixing",              0.01f,  1.00f,      0.50f));
-    addParameter (mFilterType  = new juce::AudioParameterChoice ("type",     "Filter Type",         {"LPF", "BPF", "HPF"}, 1));
-    addParameter (mOscType     = new juce::AudioParameterChoice ("osc",      "Oscillator Type",     {"Sine", "Triangle", "Sawtooth","Square","Trapezoid"}, 1));
+    addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1200.0f));
+    addParameter (mSpeed       = new juce::AudioParameterFloat  ("0x01",  "Modulation Speed",    0.1f,   200.0f,      4.0f));
+    addParameter (mMix         = new juce::AudioParameterFloat  ("0x02",  "Mixing",              0.01f,  1.00f,      0.50f));
+    addParameter (mFilterType  = new juce::AudioParameterChoice ("0x03",  "Filter Type",         {"LPF", "BPF", "HPF"}, 0));
+    addParameter (mOscType     = new juce::AudioParameterChoice ("0x04",  "Oscillator Type",     {"Sine", "Triangle", "Sawtooth","Trapezoid","Square"}, 0));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -208,8 +208,11 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             {
                 test = getSampleRate() / 2;
             }
+
             mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), test, 1.0));
             channelData[sample] = mFilter[channel].processSingleSampleRaw(channelData[sample]) * mixCtrl + raw * (1 - mixCtrl);
+            //(NumericType b0, NumericType b1, NumericType b2, NumericType a0, NumericType a1, NumericType a2)
+            //juce::IIRCoefficients::coefficients()
         }
     }
 }

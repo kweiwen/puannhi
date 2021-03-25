@@ -11,13 +11,13 @@
 
 #include <math.h>
 
-enum E_FILTER_TYPE
+enum E_OSCILLATOR_TYPE
 {
 	E_SINE	    = 0,
 	E_TRIANGLE  = 1,
 	E_SAWTOOTH  = 2,
-	E_SQUARE    = 3,
-	E_TRAPEZOID = 4,
+	E_TRAPEZOID = 3,
+	E_SQUARE    = 4,
 };
 
 class Oscillator
@@ -34,13 +34,14 @@ public:
 
 	double process(double frequency, double sampleRate, int model);
 	double currentAngle;
-	//double sineWave(double angle);
-	//double squareWave(double angle);
-	//double triangleWave(double angle);
-	//double trapezoidWave(double angle);
+	double sine(double angle);
+	double triangle(double angle);
+	double sawtooth(double angle);
+	double trapezoid(double angle);
+	double square(double angle);
 
 private:
-	double c_twoPi = 6.283185307179586476925286766559f;
+	double TWO_PI = 6.283185307179586476925286766559;
 	double currentSample;
 };
 
@@ -49,44 +50,72 @@ inline double Oscillator::process(double frequency, double sampleRate, int model
 	switch (model)
 	{
 	case E_SINE:
-		currentSample = sin(currentAngle);
+		currentSample = sine(currentAngle);
 		break;
 	case E_TRIANGLE:
-		currentSample = (4 / c_twoPi) * asin(sin(currentAngle));
+		currentSample = triangle(currentAngle);
 		break;
 	case E_SAWTOOTH:
-		double param, fractpart, intpart;
-		param = currentAngle / c_twoPi;
-		fractpart = modf(param, &intpart);
-		currentSample = (fractpart - 0.5)*2;
-		break;
-	case E_SQUARE:
-		if (sin(currentAngle) > 0)
-		{
-			currentSample = 1;
-		}
-		else if (sin(currentAngle) < 0)
-		{
-			currentSample = -1;
-		}
-		else
-		{
-			currentSample = 0;
-		}
+		currentSample = sawtooth(currentAngle);
 		break;
 	case E_TRAPEZOID:
-		double buffer = 0;
-		for (int index = 0; index < 16; index++)
-		{
-			auto coefficeint = (index * 2) + 1;
-			buffer = buffer + sin(currentAngle * coefficeint) / coefficeint;
-		};
-		currentSample = buffer;
+		currentSample = trapezoid(currentAngle);
+		break;
+	case E_SQUARE:
+		currentSample = square(currentAngle);
 		break;
 	}
-	currentAngle = currentAngle + c_twoPi * frequency / sampleRate;
+	currentAngle = currentAngle + TWO_PI * frequency / sampleRate;
 	return currentSample;
 }
 
+
+inline double Oscillator::sine(double angle)
+{
+	return sin(angle);
+}
+
+inline double Oscillator::triangle(double angle)
+{
+	return (4 / TWO_PI) * asin(sin(currentAngle));
+}
+
+inline double Oscillator::sawtooth(double angle)
+{
+	double param, fractpart, intpart, output_data;
+	param = currentAngle / TWO_PI;
+	fractpart = modf(param, &intpart);
+	output_data = (fractpart - 0.5) * 2;
+	return output_data;
+}
+
+inline double Oscillator::trapezoid(double angle)
+{
+	double output_data = 0;
+	for (int index = 0; index < 16; index++)
+	{
+		auto coefficeint = (index * 2) + 1;
+		output_data = output_data + sin(currentAngle * coefficeint) / coefficeint;
+	}
+	return output_data;
+}
+
+inline double Oscillator::square(double angle)
+{
+	double output_data;
+	if (sin(currentAngle) > 0)
+	{
+		output_data = 1;
+	}
+	else if (sin(currentAngle) < 0)
+	{
+		output_data = -1;
+	}
+	else
+	{
+		output_data = 0;
+	}
+	return output_data;
+}
 
 #endif /* Oscillator_h */
