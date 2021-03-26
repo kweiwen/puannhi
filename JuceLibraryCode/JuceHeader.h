@@ -40,8 +40,8 @@
 #if ! JUCE_DONT_DECLARE_PROJECTINFO
 namespace ProjectInfo
 {
-    const char* const  projectName    = "CircularBuffer";
-    const char* const  companyName    = "Sikhaa Electronics";
+    const char* const  projectName    = "ModFilter";
+    const char* const  companyName    = "Lava Music";
     const char* const  versionString  = "1.0.0";
     const int          versionNumber  = 0x10000;
 }
