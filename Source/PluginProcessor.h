@@ -63,24 +63,24 @@ public:
 
 private:
     std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
-    std::vector<juce::IIRFilter> mFilter;
+    //std::vector<juce::IIRFilter> mFilter;
     std::vector<Oscillator> modulator;
-    FilterDesigner mCoefficient;
+    //FilterDesigner mCoefficient;
     
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
     std::vector<ParameterSmooth> mMixCtrl;
-    std::vector<ParameterSmooth> mCutOffCtrl;
+    //std::vector<ParameterSmooth> mCutOffCtrl;
     std::vector<ParameterSmooth> mSpeedCtrl;
 
     juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mTime;
     juce::AudioParameterFloat* mMix;
-    juce::AudioParameterFloat* mCutOff;
-    juce::AudioParameterFloat* mResonance;
-    juce::AudioParameterInt* mAmount;
-    juce::AudioParameterInt* mSpeed;
-    juce::AudioParameterChoice* mFilterType;
+    //juce::AudioParameterFloat* mCutOff;
+    //juce::AudioParameterFloat* mResonance;
+    //juce::AudioParameterInt* mAmount;
+    juce::AudioParameterFloat* mSpeed;
+    //juce::AudioParameterChoice* mFilterType;
     juce::AudioParameterChoice* mOscType;
 
     

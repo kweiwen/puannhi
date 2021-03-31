@@ -22,15 +22,15 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
                        )
 #endif
 {
-    //addParameter (mFeedback    = new juce::AudioParameterFloat ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
-    //addParameter (mTime        = new juce::AudioParameterFloat ("time",     "Time",     0.01f,  1.00f,      0.50f));
-    addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1500.0f));
-    addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance",           0.1f,   15.0f,      1.5f));
-    addParameter (mSpeed       = new juce::AudioParameterInt    ("0x02",  "Modulation Speed",    1,      10,         2));
-    addParameter (mAmount      = new juce::AudioParameterInt    ("0x03",  "Modulation Amount",   100,    1000,       800));
-    addParameter (mMix         = new juce::AudioParameterFloat  ("0x04",  "Mixing",              0.01f,  1.00f,      0.50f));
-    addParameter (mFilterType  = new juce::AudioParameterChoice ("0x05",  "Filter Type",         {"FLAT","LPF", "BPF", "HPF"}, 1));
-    addParameter (mOscType     = new juce::AudioParameterChoice ("0x06",  "Oscillator Type",     {"Sine", "Triangle", "Sawtooth","Trapezoid","Square"}, 0));
+    addParameter (mFeedback    = new juce::AudioParameterFloat  ("feedback", "Feedback", 0.00f,  1.00f,      0.50f));
+    addParameter (mTime        = new juce::AudioParameterFloat  ("time",     "Time",     0.01f,  1.00f,      0.50f));
+    addParameter (mMix         = new juce::AudioParameterFloat  ("0x04",  "Mixing",              0.01f,  1.00f,      1.00f));
+    //addParameter (mCutOff      = new juce::AudioParameterFloat  ("0x00",  "Frequency Cut-Off",   20.0f,  2500.0f,    1500.0f));
+    //addParameter (mResonance   = new juce::AudioParameterFloat  ("0x01",  "Resonance",           0.1f,   15.0f,      1.5f));
+    addParameter (mSpeed       = new juce::AudioParameterFloat    ("0x02",  "Modulation Speed",    -1,      1,         1.0));
+    //addParameter (mAmount      = new juce::AudioParameterInt    ("0x03",  "Modulation Amount",   100,    1000,       800));
+    //addParameter (mFilterType  = new juce::AudioParameterChoice ("0x05",  "Filter Type",         {"FLAT","LPF", "BPF", "HPF"}, 1));
+    addParameter (mOscType     = new juce::AudioParameterChoice ("0x06",  "Oscillator Type",     {"Sine", "Triangle", "Sawtooth","Trapezoid","Square"}, 2));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -121,14 +121,14 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         mFeedbackCtrl.push_back(ParameterSmooth());
         mFeedbackCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
-        mCutOffCtrl.push_back(ParameterSmooth());
-        mCutOffCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        //mCutOffCtrl.push_back(ParameterSmooth());
+        //mCutOffCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mSpeedCtrl.push_back(ParameterSmooth());
         mSpeedCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
-        mFilter.push_back(juce::IIRFilter());
-        mFilter[index].setCoefficients(juce::IIRCoefficients::makeLowPass(sampleRate, 1200.0f, 1.0));
+        //mFilter.push_back(juce::IIRFilter());
+        //mFilter[index].setCoefficients(juce::IIRCoefficients::makeLowPass(sampleRate, 1200.0f, 1.0));
 
         modulator.push_back(Oscillator());
     }
@@ -210,35 +210,41 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         {
             // ..do something to the data...
             // start to smooth the parameter control
-            //auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
-            //auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
+            auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
+            auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-            auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
-            auto raw = channelData[sample];
+            auto modulation = modulator[channel].process(mSpeed->get(), getSampleRate(), mOscType->getIndex());
 
-            //channelData[sample] = mCircularBuffer[channel].process(channelData[sample], timeCtrl * getSampleRate(), feedbackCtrl, mixCtrl);
-            auto systemSpeed = bpm / 60.0 * numeratorSubDivision / denominatorSubDivision;
-            auto modulation = modulator[channel].process(systemSpeed * mSpeed->get(), getSampleRate(), mOscType->getIndex());
+            auto raw = abs(modulation - 1) * getSampleRate() / 2;
+            //auto raw = (modulation + 0.5) * getSampleRate();
+            //DBG(raw);
 
-            auto test = modulation * mAmount->get() + cutOffCtrl;
-            if (test <= 20)
-            {
-                test = 20;
-            }
-            else if (test >= getSampleRate() / 2)
-            {
-                test = getSampleRate() / 2;
-            }
-            mCoefficient.model = mFilterType->getIndex();
-            mCoefficient.setParameter(test, getSampleRate(), mResonance->get(), 0.0, 0.0);
-            mFilter[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
-                                                                   mCoefficient.getCoefficients()[1],
-                                                                   mCoefficient.getCoefficients()[2],
-                                                                   mCoefficient.getCoefficients()[3],
-                                                                   mCoefficient.getCoefficients()[4],
-                                                                   mCoefficient.getCoefficients()[5]));
+            //auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
+            //auto raw = channelData[sample];
+
+            channelData[sample] = mCircularBuffer[channel].process(channelData[sample], raw, feedbackCtrl, mixCtrl);
+            //auto systemSpeed = bpm / 60.0 * numeratorSubDivision / denominatorSubDivision;
+            
+
+            //auto test = modulation * mAmount->get() + cutOffCtrl;
+            //if (test <= 20)
+            //{
+            //    test = 20;
+            //}
+            //else if (test >= getSampleRate() / 2)
+            //{
+            //    test = getSampleRate() / 2;
+            //}
+            //mCoefficient.model = mFilterType->getIndex();
+            //mCoefficient.setParameter(test, getSampleRate(), mResonance->get(), 0.0, 0.0);
+            //mFilter[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+            //                                                       mCoefficient.getCoefficients()[1],
+            //                                                       mCoefficient.getCoefficients()[2],
+            //                                                       mCoefficient.getCoefficients()[3],
+            //                                                       mCoefficient.getCoefficients()[4],
+            //                                                       mCoefficient.getCoefficients()[5]));
             //mFilter[channel].setCoefficients(juce::IIRCoefficients::makeLowPass(getSampleRate(), test, 1.0));
-            channelData[sample] = mFilter[channel].processSingleSampleRaw(channelData[sample]) * mixCtrl + raw * (1 - mixCtrl);
+            //channelData[sample] = mFilter[channel].processSingleSampleRaw(channelData[sample]) * mixCtrl + raw * (1 - mixCtrl);
             //(NumericType b0, NumericType b1, NumericType b2, NumericType a0, NumericType a1, NumericType a2)
             //juce::IIRCoefficients::coefficients()
         }
