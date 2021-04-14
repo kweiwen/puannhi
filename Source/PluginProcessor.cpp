@@ -23,7 +23,7 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
 #endif
 {
     addParameter (mMix         = new juce::AudioParameterFloat  ("0x00",  "Mixing", 0.01f,  1.00f,  1.00f));
-    addParameter (mSpeed       = new juce::AudioParameterInt    ("0x01",  "Pitch",  -12,    12,     0));
+    addParameter (mSpeed       = new juce::AudioParameterInt    ("0x01",  "Pitch",  0,    24,     12));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -179,7 +179,7 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             // ..do something to the data...
             // start to smooth the parameter control
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-            auto pitch = ((pow(2, mSpeed->get()/12)) - 1) * -20;
+            auto pitch = ((pow(2, (mSpeed->get() - 12)/12)) - 1) * -20;
             
             auto phasor_1 = modulator_1[channel].process(pitch, getSampleRate(), 5);
             auto phasor_2 = modulator_2[channel].process(pitch, getSampleRate(), 6);
