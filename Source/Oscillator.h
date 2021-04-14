@@ -13,11 +13,13 @@
 
 enum E_OSCILLATOR_TYPE
 {
-	E_SINE	    = 0,
-	E_TRIANGLE  = 1,
-	E_SAWTOOTH  = 2,
-	E_TRAPEZOID = 3,
-	E_SQUARE    = 4,
+	E_SINE	        = 0,
+	E_TRIANGLE      = 1,
+	E_SAWTOOTH      = 2,
+	E_TRAPEZOID     = 3,
+	E_SQUARE        = 4,
+    E_PHASOR        = 5,
+    E_PHASOR_INV    = 6,
 };
 
 class Oscillator
@@ -39,6 +41,7 @@ public:
 	double sawtooth(double angle);
 	double trapezoid(double angle);
 	double square(double angle);
+    double phasor(double angle);
 
 private:
 	double TWO_PI = 6.283185307179586476925286766559;
@@ -64,6 +67,12 @@ inline double Oscillator::process(double frequency, double sampleRate, int model
 	case E_SQUARE:
 		currentSample = square(currentAngle);
 		break;
+    case E_PHASOR:
+        currentSample = phasor(currentAngle);
+        break;
+    case E_PHASOR_INV:
+        currentSample = phasor(currentAngle+TWO_PI/2);
+        break;
 	}
 	currentAngle = currentAngle + TWO_PI * frequency / sampleRate;
 	return currentSample;
@@ -77,13 +86,13 @@ inline double Oscillator::sine(double angle)
 
 inline double Oscillator::triangle(double angle)
 {
-	return (4 / TWO_PI) * asin(sin(currentAngle));
+	return (4 / TWO_PI) * asin(sin(angle));
 }
 
 inline double Oscillator::sawtooth(double angle)
 {
 	double param, fractpart, intpart, output_data;
-	param = currentAngle / TWO_PI;
+	param = angle / TWO_PI;
 	fractpart = modf(param, &intpart);
 	output_data = (fractpart - 0.5) * 2;
 	return output_data;
@@ -95,7 +104,7 @@ inline double Oscillator::trapezoid(double angle)
 	for (int index = 0; index < 16; index++)
 	{
 		auto coefficeint = (index * 2) + 1;
-		output_data = output_data + sin(currentAngle * coefficeint) / coefficeint;
+		output_data = output_data + sin(angle * coefficeint) / coefficeint;
 	}
 	return output_data;
 }
@@ -103,11 +112,11 @@ inline double Oscillator::trapezoid(double angle)
 inline double Oscillator::square(double angle)
 {
 	double output_data;
-	if (sin(currentAngle) > 0)
+	if (sin(angle) > 0)
 	{
 		output_data = 1;
 	}
-	else if (sin(currentAngle) < 0)
+	else if (sin(angle) < 0)
 	{
 		output_data = -1;
 	}
@@ -116,6 +125,14 @@ inline double Oscillator::square(double angle)
 		output_data = 0;
 	}
 	return output_data;
+}
+
+inline double Oscillator::phasor(double angle)
+{
+    double param, intpart, output_data;
+    param = angle / TWO_PI;
+    output_data = modf(param, &intpart);
+    return output_data;
 }
 
 #endif /* Oscillator_h */
