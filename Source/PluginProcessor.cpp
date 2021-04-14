@@ -22,8 +22,8 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
                        )
 #endif
 {
-    addParameter (mMix         = new juce::AudioParameterFloat  ("0x00",  "Mixing",              0.01f,  1.00f,      1.00f));
-    addParameter (mSpeed       = new juce::AudioParameterInt  ("0x01",  "Pitch",    -12,      12,         0));
+    addParameter (mMix         = new juce::AudioParameterFloat  ("0x00",  "Mixing", 0.01f,  1.00f,  1.00f));
+    addParameter (mSpeed       = new juce::AudioParameterInt    ("0x01",  "Pitch",  -12,    12,     0));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -180,15 +180,20 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             // start to smooth the parameter control
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
             auto pitch = ((pow(2, mSpeed->get()/12)) - 1) * -20;
+            
             auto phasor_1 = modulator_1[channel].process(pitch, getSampleRate(), 5);
             auto phasor_2 = modulator_2[channel].process(pitch, getSampleRate(), 6);
             
             auto delay_line_modulation_1 = phasor_1 * getSampleRate() * 0.05;
             auto delay_line_modulation_2 = phasor_2 * getSampleRate() * 0.05;
+            
             auto window_1 = ((cos(M_PI * 2 * phasor_1) * -1) + 1) / 2.0;
             auto window_2 = ((cos(M_PI * 2 * phasor_2) * -1) + 1) / 2.0;
 
-            channelData[sample] = mCircularBuffer_1[channel].process(channelData[sample], delay_line_modulation_1, 0, mixCtrl) * window_1 + mCircularBuffer_2[channel].process(channelData[sample], delay_line_modulation_2, 0, mixCtrl) * window_2;
+            auto delay_1 = mCircularBuffer_1[channel].process(channelData[sample], delay_line_modulation_1, 0, mixCtrl) * window_1;
+            auto delay_2 = mCircularBuffer_2[channel].process(channelData[sample], delay_line_modulation_2, 0, mixCtrl) * window_2;
+            
+            channelData[sample] = delay_1 + delay_2;
         }
     }
 }
