@@ -23,7 +23,7 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
 #endif
 {
     addParameter (mMix         = new juce::AudioParameterFloat  ("0x00",  "Mixing",              0.01f,  1.00f,      1.00f));
-    addParameter (mSpeed       = new juce::AudioParameterFloat  ("0x01",  "Pitch",    -12,      12,         0.0));
+    addParameter (mSpeed       = new juce::AudioParameterInt  ("0x01",  "Pitch",    -12,      12,         0));
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()

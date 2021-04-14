@@ -72,7 +72,7 @@ private:
     std::vector<ParameterSmooth> mSpeedCtrl;
 
     juce::AudioParameterFloat* mMix;
-    juce::AudioParameterFloat* mSpeed;
+    juce::AudioParameterInt* mSpeed;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
