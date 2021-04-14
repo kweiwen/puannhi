@@ -38,10 +38,10 @@
  #define JucePlugin_Enable_IAA             0
 #endif
 #ifndef  JucePlugin_Name
- #define JucePlugin_Name                   "ModFilter"
+ #define JucePlugin_Name                   "PitchShift"
 #endif
 #ifndef  JucePlugin_Desc
- #define JucePlugin_Desc                   "ModFilter"
+ #define JucePlugin_Desc                   "PitchShift"
 #endif
 #ifndef  JucePlugin_Manufacturer
  #define JucePlugin_Manufacturer           "Lava Music"
@@ -98,16 +98,16 @@
  #define JucePlugin_AUSubType              JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_AUExportPrefix
- #define JucePlugin_AUExportPrefix         ModFilterAU
+ #define JucePlugin_AUExportPrefix         PitchShiftAU
 #endif
 #ifndef  JucePlugin_AUExportPrefixQuoted
- #define JucePlugin_AUExportPrefixQuoted   "ModFilterAU"
+ #define JucePlugin_AUExportPrefixQuoted   "PitchShiftAU"
 #endif
 #ifndef  JucePlugin_AUManufacturerCode
  #define JucePlugin_AUManufacturerCode     JucePlugin_ManufacturerCode
 #endif
 #ifndef  JucePlugin_CFBundleIdentifier
- #define JucePlugin_CFBundleIdentifier     com.LavaMusic.ModFilter
+ #define JucePlugin_CFBundleIdentifier     com.LavaMusic.PitchShift
 #endif
 #ifndef  JucePlugin_RTASCategory
  #define JucePlugin_RTASCategory           16
@@ -125,7 +125,7 @@
  #define JucePlugin_RTASDisableMultiMono   0
 #endif
 #ifndef  JucePlugin_AAXIdentifier
- #define JucePlugin_AAXIdentifier          com.LavaMusic.ModFilter
+ #define JucePlugin_AAXIdentifier          com.LavaMusic.PitchShift
 #endif
 #ifndef  JucePlugin_AAXManufacturerCode
  #define JucePlugin_AAXManufacturerCode    JucePlugin_ManufacturerCode
@@ -149,7 +149,7 @@
  #define JucePlugin_IAASubType             JucePlugin_PluginCode
 #endif
 #ifndef  JucePlugin_IAAName
- #define JucePlugin_IAAName                "Lava Music: ModFilter"
+ #define JucePlugin_IAAName                "Lava Music: PitchShift"
 #endif
 #ifndef  JucePlugin_VSTNumMidiInputs
  #define JucePlugin_VSTNumMidiInputs       16
