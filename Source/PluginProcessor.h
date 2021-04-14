@@ -62,33 +62,18 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer;
-    //std::vector<juce::IIRFilter> mFilter;
-    std::vector<Oscillator> modulator;
-    //FilterDesigner mCoefficient;
+    std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer_1;
+    std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer_2;
     
-    std::vector<ParameterSmooth> mFeedbackCtrl;
-    std::vector<ParameterSmooth> mTimeCtrl;
+    std::vector<Oscillator> modulator_1;
+    std::vector<Oscillator> modulator_2;
+    
     std::vector<ParameterSmooth> mMixCtrl;
-    //std::vector<ParameterSmooth> mCutOffCtrl;
     std::vector<ParameterSmooth> mSpeedCtrl;
 
-    juce::AudioParameterFloat* mFeedback;
-    juce::AudioParameterFloat* mTime;
     juce::AudioParameterFloat* mMix;
-    //juce::AudioParameterFloat* mCutOff;
-    //juce::AudioParameterFloat* mResonance;
-    //juce::AudioParameterInt* mAmount;
     juce::AudioParameterFloat* mSpeed;
-    //juce::AudioParameterChoice* mFilterType;
-    juce::AudioParameterChoice* mOscType;
-
     
-    juce::AudioPlayHead* playHead;
-    juce::AudioPlayHead::CurrentPositionInfo currentPositionInfo;
-    double bpm;
-    int numeratorSubDivision;
-    int denominatorSubDivision;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
 };
