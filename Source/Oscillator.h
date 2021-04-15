@@ -11,6 +11,10 @@
 
 #include <math.h>
 
+#ifndef TWO_PI  
+#define TWO_PI 6.283185307179586476925286766559
+#endif
+
 enum E_OSCILLATOR_TYPE
 {
 	E_SINE	        = 0,
@@ -44,7 +48,6 @@ public:
     double phasor(double angle);
 
 private:
-	double TWO_PI = 6.283185307179586476925286766559;
 	double currentSample;
 };
 

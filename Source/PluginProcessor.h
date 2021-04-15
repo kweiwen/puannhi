@@ -69,10 +69,10 @@ private:
     std::vector<Oscillator> modulator_2;
     
     std::vector<ParameterSmooth> mMixCtrl;
-    std::vector<ParameterSmooth> mSpeedCtrl;
+    std::vector<ParameterSmooth> mPitchCtrl;
 
     juce::AudioParameterFloat* mMix;
-    juce::AudioParameterInt* mSpeed;
+    juce::AudioParameterInt* mPitch;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
