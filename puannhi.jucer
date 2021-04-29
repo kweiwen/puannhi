@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="bbLuTc" name="PitchShift" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
-              pluginManufacturer="Lava Music" pluginAAXCategory="0" pluginVSTCategory="kPlugCategEffect"
-              pluginRTASCategory="16" pluginVST3Category="Fx" pluginAUMainType="'aufx'"
-              companyName="Lava Music">
-  <MAINGROUP id="mDAY29" name="PitchShift">
+<JUCERPROJECT id="bbLuTc" name="FeedbackDelayNetwork" projectType="audioplug"
+              useAppConfig="0" addUsingNamespaceToJuceHeader="0" displaySplashScreen="1"
+              jucerFormatVersion="1" pluginManufacturer="Lava Music" pluginAAXCategory="0"
+              pluginVSTCategory="kPlugCategEffect" pluginRTASCategory="16"
+              pluginVST3Category="Fx" pluginAUMainType="'aufx'" companyName="Lava Music">
+  <MAINGROUP id="mDAY29" name="FeedbackDelayNetwork">
     <GROUP id="{BBE079E4-F94F-7485-161A-6A2032B74FBE}" name="Source">
       <FILE id="EUPXSJ" name="CircularBuffer.h" compile="0" resource="0"
             file="Source/CircularBuffer.h"/>
