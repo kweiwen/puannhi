@@ -103,9 +103,12 @@ void FilterDesigner::setCoefficients()
 float* FilterDesigner::getCoefficients()
 {
 	static float coefficients[6];
+	// numerator of transfer function
 	coefficients[0] = a0;
 	coefficients[1] = a1;
 	coefficients[2] = a2;
+
+	// denominator of transfer function
 	coefficients[3] = b0;
 	coefficients[4] = b1;
 	coefficients[5] = b2;
