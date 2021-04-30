@@ -37,7 +37,8 @@ public:
 };
 
 template <typename T>
-inline T DelayAPF<T>::processSchroeder(T sample, T delaySample, float delayGain){
+inline T DelayAPF<T>::processSchroeder(T sample, T delaySample, float delayGain)
+{
     auto delayedSample = digitalDelayLine.readBuffer(delaySample);
     digitalDelayLine.writeBuffer(sample + (delayedSample * delayGain));
     

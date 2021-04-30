@@ -4,7 +4,8 @@
               useAppConfig="0" addUsingNamespaceToJuceHeader="0" displaySplashScreen="1"
               jucerFormatVersion="1" pluginManufacturer="Lava Music" pluginAAXCategory="0"
               pluginVSTCategory="kPlugCategEffect" pluginRTASCategory="16"
-              pluginVST3Category="Fx" pluginAUMainType="'aufx'" companyName="Lava Music">
+              pluginVST3Category="Fx" pluginAUMainType="'aufx'" companyName="Lava Music"
+              pluginCode="Ydyo">
   <MAINGROUP id="mDAY29" name="FeedbackDelayNetwork">
     <GROUP id="{BBE079E4-F94F-7485-161A-6A2032B74FBE}" name="Source">
       <FILE id="EUPXSJ" name="CircularBuffer.h" compile="0" resource="0"
@@ -49,6 +50,7 @@
         <MODULEPATH id="juce_graphics" path="../Documents/JUCE/modules"/>
         <MODULEPATH id="juce_gui_basics" path="../Documents/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../Documents/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="C:/JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019">
@@ -69,6 +71,7 @@
         <MODULEPATH id="juce_audio_formats" path="../../juce"/>
         <MODULEPATH id="juce_audio_devices" path="../../juce"/>
         <MODULEPATH id="juce_audio_basics" path="../../juce"/>
+        <MODULEPATH id="juce_dsp" path="C:/JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
   </EXPORTFORMATS>
@@ -82,6 +85,7 @@
     <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

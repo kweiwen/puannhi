@@ -14,6 +14,7 @@
 #include "DelayFeedback.h"
 #include "FilterDesigner.h"
 #include "Oscillator.h"
+#include "DelayAPF.h"
 
 //==============================================================================
 /**
@@ -62,17 +63,38 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
-    std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer_1;
-    std::unique_ptr<DelayFeedback<float>[]> mCircularBuffer_2;
-    
-    std::vector<Oscillator> modulator_1;
-    std::vector<Oscillator> modulator_2;
-    
-    std::vector<ParameterSmooth> mMixCtrl;
-    std::vector<ParameterSmooth> mPitchCtrl;
+    std::unique_ptr<CircularBuffer<float>[]> CB_1;
+    std::unique_ptr<CircularBuffer<float>[]> CB_2;
+    std::unique_ptr<CircularBuffer<float>[]> CB_3;
+    std::unique_ptr<CircularBuffer<float>[]> CB_4;
+
+    std::unique_ptr<DelayAPF<float>[]> APF_1;
+    std::unique_ptr<DelayAPF<float>[]> APF_2;
+    std::unique_ptr<DelayAPF<float>[]> APF_3;
+    std::unique_ptr<DelayAPF<float>[]> APF_4;
+
+    float feedbackLoop_1;
+    float feedbackLoop_2;
+    float feedbackLoop_3;
+    float feedbackLoop_4;
+
+    std::vector<juce::IIRFilter> mFilter_1;
+    std::vector<juce::IIRFilter> mFilter_2;
+    std::vector<juce::IIRFilter> mFilter_3;
+    std::vector<juce::IIRFilter> mFilter_4;
 
     juce::AudioParameterFloat* mMix;
-    juce::AudioParameterInt* mPitch;
+    juce::AudioParameterFloat* mDamp;
+    juce::AudioParameterFloat* mFeedback;
+    juce::AudioParameterFloat* mCoupling;
+
+    std::vector<ParameterSmooth> mMixCtrl;
+    std::vector<ParameterSmooth> mDampCtrl;
+    std::vector<ParameterSmooth> mFeedbackCtrl;
+    std::vector<ParameterSmooth> mCouplingCtrl;
+
+    double cosine;
+    double sine;
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
