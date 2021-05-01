@@ -72,24 +72,26 @@ private:
     std::unique_ptr<DelayAPF<float>[]> APF_2;
     std::unique_ptr<DelayAPF<float>[]> APF_3;
     std::unique_ptr<DelayAPF<float>[]> APF_4;
-
-    float feedbackLoop_1;
-    float feedbackLoop_2;
-    float feedbackLoop_3;
-    float feedbackLoop_4;
+    
+    std::vector<float> feedbackLoop_1;
+    std::vector<float> feedbackLoop_2;
+    std::vector<float> feedbackLoop_3;
+    std::vector<float> feedbackLoop_4;
 
     std::vector<juce::IIRFilter> mFilter_1;
     std::vector<juce::IIRFilter> mFilter_2;
 
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mDamp;
-    juce::AudioParameterFloat* mFeedback;
-    juce::AudioParameterFloat* mCoupling;
+    juce::AudioParameterFloat* mDecay;
+    juce::AudioParameterFloat* mSpread;
+    juce::AudioParameterFloat* mDensity;
 
     std::vector<ParameterSmooth> mMixCtrl;
     std::vector<ParameterSmooth> mDampCtrl;
-    std::vector<ParameterSmooth> mFeedbackCtrl;
-    std::vector<ParameterSmooth> mCouplingCtrl;
+    std::vector<ParameterSmooth> mDecayCtrl;
+    std::vector<ParameterSmooth> mSpreadCtrl;
+    std::vector<ParameterSmooth> mDensityCtrl;
 
     double root2;
     

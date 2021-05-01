@@ -22,17 +22,13 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
                        )
 #endif
 {
-    addParameter    (mMix      = new juce::AudioParameterFloat  ("0x00",    "Mixing",       0.00f,  1.00f,  0.50f));
-    addParameter    (mDamp     = new juce::AudioParameterFloat  ("0x01",    "Damping",      0.00f,  1.00f,  0.50f));
-    addParameter    (mFeedback = new juce::AudioParameterFloat  ("0x02",    "Feedback",     0.00f,  1.00f,  0.50f));
-    addParameter    (mCoupling = new juce::AudioParameterFloat  ("0x03",    "Coudpling",    0.00f,  1.00f,  0.50f));
-
-    feedbackLoop_1 = 0.0f;
-    feedbackLoop_2 = 0.0f;
-    feedbackLoop_3 = 0.0f;
-    feedbackLoop_4 = 0.0f;
+    addParameter    (mMix        = new juce::AudioParameterFloat  ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
+    addParameter    (mDamp       = new juce::AudioParameterFloat  ("0x01",    "Damping",    0.00f,  1.00f,  0.50f));
+    addParameter    (mDecay      = new juce::AudioParameterFloat  ("0x02",    "Decay",      0.00f,  1.00f,  0.50f));
+    addParameter    (mSpread     = new juce::AudioParameterFloat  ("0x03",    "Spread",     0.00f,  1.00f,  0.50f));
+    addParameter    (mDensity    = new juce::AudioParameterFloat  ("0x04",    "Density",    0.00f,  0.70f,  0.50f));
     
-    root2 = sqrt(2);
+    root2 = std::sqrt(2.f);
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -144,19 +140,27 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         APF_4[index].digitalDelayLine.flushBuffer();
         
         mMixCtrl.push_back(ParameterSmooth());
-        mMixCtrl[index].createCoefficients(sampleRate / 4000, sampleRate);
+        mMixCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
 
         mDampCtrl.push_back(ParameterSmooth());
-        mDampCtrl[index].createCoefficients(sampleRate / 4000, sampleRate);
+        mDampCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
 
-        mFeedbackCtrl.push_back(ParameterSmooth());
-        mFeedbackCtrl[index].createCoefficients(sampleRate / 4000, sampleRate);
+        mDecayCtrl.push_back(ParameterSmooth());
+        mDecayCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
 
-        mCouplingCtrl.push_back(ParameterSmooth());
-        mCouplingCtrl[index].createCoefficients(sampleRate / 4000, sampleRate);
+        mSpreadCtrl.push_back(ParameterSmooth());
+        mSpreadCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
+        
+        mDensityCtrl.push_back(ParameterSmooth());
+        mDensityCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
 
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
+        
+        feedbackLoop_1.push_back(0.0f);
+        feedbackLoop_2.push_back(0.0f);
+        feedbackLoop_3.push_back(0.0f);
+        feedbackLoop_4.push_back(0.0f);
     }
 }
 
@@ -215,8 +219,9 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     {
         auto mixCtrl = mMixCtrl[channel].process(mMix->get());
         auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
-        auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
-        auto couplingCtrl = (mCouplingCtrl[channel].process(mCoupling->get()) * 50 + 20) * TWO_PI / 360;
+        auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
+        auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 60 + 15) * TWO_PI / 360;
+        auto densityCtrl = mDensityCtrl[channel].process(mDensity->get());
 
         auto b0 = (1 - dampCtrl);
         auto a1 = -dampCtrl;
@@ -224,47 +229,47 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         mFilter_1[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
         mFilter_2[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
         
-        auto sine = sin(couplingCtrl);
-        auto cosine = cos(couplingCtrl);
+        auto sine = sin(spreadCtrl);
+        auto cosine = cos(spreadCtrl);
         
         auto* channelData = buffer.getWritePointer (channel);
+        
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
         {
             // ..do something to the data...
-            // start to smooth the parameter control
             auto drySignal = channelData[sample];
 
-            auto lpf_1 = drySignal + feedbackLoop_1 * feedbackCtrl;
-            auto lpf_2 = drySignal + feedbackLoop_3 * feedbackCtrl;
-            auto lpf_3 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_2 * feedbackCtrl);
-            auto lpf_4 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_4 * feedbackCtrl);
-
-//            auto apf_1 = APF_1[channel].processSchroeder(lpf_1, 41, 0.05);
-//            auto apf_2 = APF_2[channel].processSchroeder(lpf_2, 43, 0.05);
-//            auto apf_3 = APF_3[channel].processSchroeder(lpf_3, 71, 0.05);
-//            auto apf_4 = APF_4[channel].processSchroeder(lpf_4, 73, 0.05);
+            auto lpf_1 = drySignal + feedbackLoop_1[channel] * decayCtrl;
+            auto lpf_2 = drySignal + feedbackLoop_3[channel] * decayCtrl;
+            auto lpf_3 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_2[channel] * decayCtrl);
+            auto lpf_4 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_4[channel] * decayCtrl);
+            
+//            auto apf_1 = APF_1[channel].processSchroeder(lpf_1, 137, densityCtrl);
+//            auto apf_2 = APF_1[channel].processSchroeder(lpf_2, 139, densityCtrl);
+//            auto apf_3 = APF_1[channel].processSchroeder(lpf_3, 521, densityCtrl);
+//            auto apf_4 = APF_1[channel].processSchroeder(lpf_4, 523, densityCtrl);
+            
+            auto A = CB_1[channel].readBuffer(1951);
+            auto B = CB_2[channel].readBuffer(2992);
+            auto C = CB_3[channel].readBuffer(4761);
+            auto D = CB_4[channel].readBuffer(6480);
             
             CB_1[channel].writeBuffer(lpf_1);
             CB_2[channel].writeBuffer(lpf_2);
             CB_3[channel].writeBuffer(lpf_3);
             CB_4[channel].writeBuffer(lpf_4);
-
-            auto A = CB_1[channel].readBuffer(2777);
-            auto B = CB_2[channel].readBuffer(4481);
-            auto C = CB_3[channel].readBuffer(5813);
-            auto D = CB_4[channel].readBuffer(8171);
-
-            channelData[sample] = (C + D) * mixCtrl + drySignal * (1 - mixCtrl);
+            
+            channelData[sample] = (A+ B+ C + D) * mixCtrl + drySignal * (1 - mixCtrl);
             
             auto M1 = A * root2 * 0.5 - B * root2 * 0.5;
             auto M2 = A * root2 * 0.5 + B * root2 * 0.5;
             auto M3 = C * root2 * 0.5 - D * root2 * 0.5;
             auto M4 = C * root2 * 0.5 + D * root2 * 0.5;
             
-            feedbackLoop_1 = (M1 * cosine - M3 * sine);
-            feedbackLoop_2 = (M1 * sine + M3 * cosine);
-            feedbackLoop_3 = (M2 * cosine - M4 * sine);
-            feedbackLoop_4 = (M2 * sine + M4 * cosine);
+            feedbackLoop_1[channel] = (M1 * sine - M3 * cosine);
+            feedbackLoop_2[channel] = (M1 * cosine + M3 * sine);
+            feedbackLoop_3[channel] = (M2 * sine - M4 * cosine);
+            feedbackLoop_4[channel] = (M2 * cosine + M4 * sine);
         }
     }
 }
