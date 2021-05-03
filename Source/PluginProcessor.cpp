@@ -243,6 +243,8 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             auto lpf_2 = drySignal + feedbackLoop_3[channel] * decayCtrl;
             auto lpf_3 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_2[channel] * decayCtrl);
             auto lpf_4 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_4[channel] * decayCtrl);
+            lpf_3 = mFilter_1[channel].processSingleSampleRaw(lpf_3);
+            lpf_4 = mFilter_2[channel].processSingleSampleRaw(lpf_4);
             
 //            auto apf_1 = APF_1[channel].processSchroeder(lpf_1, 137, densityCtrl);
 //            auto apf_2 = APF_1[channel].processSchroeder(lpf_2, 139, densityCtrl);
