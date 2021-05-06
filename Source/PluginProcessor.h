@@ -97,8 +97,6 @@ private:
     std::vector<ParameterSmooth> mDensityCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
 
-    double root2;
-    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
 };

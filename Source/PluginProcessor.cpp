@@ -26,10 +26,8 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
     addParameter    (mDamp       = new juce::AudioParameterFloat  ("0x01",    "Damping",    0.00f,  1.00f,  0.50f));
     addParameter    (mDecay      = new juce::AudioParameterFloat  ("0x02",    "Decay",      0.00f,  1.00f,  0.50f));
     addParameter    (mSpread     = new juce::AudioParameterFloat  ("0x03",    "Spread",     0.00f,  1.00f,  0.50f));
-    addParameter    (mDensity    = new juce::AudioParameterFloat  ("0x04",    "Density",    0.00f,  0.80f,  0.50f));
-    addParameter    (mTime       = new juce::AudioParameterFloat  ("0x05",    "Time",       0.50f,  1.00f,  0.50f));
+    addParameter    (mTime       = new juce::AudioParameterFloat  ("0x04",    "Time",       0.50f,  1.00f,  0.50f));
     
-    root2 = std::sqrt(2.f);
 }
 
 CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
@@ -156,7 +154,7 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         mDensityCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
         
         mTimeCtrl.push_back(ParameterSmooth());
-        mTimeCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
+        mTimeCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
@@ -227,8 +225,6 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
         auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
         auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 60 + 15) * TWO_PI / 360;
-        auto densityCtrl = mDensityCtrl[channel].process(mDensity->get());
-        auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
 
         auto b0 = (1 - dampCtrl);
         auto a1 = -dampCtrl;
@@ -245,13 +241,15 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
         {
+            auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
+
             // ..do something to the data...
             auto drySignal = channelData[sample];
 
             auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(drySignal + feedbackLoop_1[channel] * decayCtrl);
             auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(drySignal + feedbackLoop_3[channel] * decayCtrl);
-            auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(drySignal + feedbackLoop_2[channel] * decayCtrl);
-            auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(drySignal + feedbackLoop_4[channel] * decayCtrl);
+            auto lpf_3 = drySignal + feedbackLoop_2[channel] * decayCtrl;
+            auto lpf_4 = drySignal + feedbackLoop_4[channel] * decayCtrl;
             
 //            auto apf_1 = APF_1[channel].processGerzon(lpf_1, 541, densityCtrl);
 //            auto apf_2 = APF_1[channel].processGerzon(lpf_2, 113, densityCtrl);
@@ -270,46 +268,10 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             
             channelData[sample] = (A + B + C + D) * mixCtrl + drySignal * (1 - mixCtrl);
             
-//            if (A > 1 || A < 1)
-//            {
-//
-//            }
-//            else
-//            {
-//                A = 4 * pow(A, 3) - 3 * A;
-//            }
-//
-//            if (B > 1 || B < 1)
-//            {
-//
-//            }
-//            else
-//            {
-//                B = 4 * pow(B, 3) - 3 * B;
-//            }
-//
-//            if (C > 1 || C < 1)
-//            {
-//
-//            }
-//            else
-//            {
-//                C = 4 * pow(C, 3) - 3 * C;
-//            }
-//
-//            if (D > 1 || D < 1)
-//            {
-//
-//            }
-//            else
-//            {
-//                D = 4 * pow(D, 3) - 3 * D;
-//            }
-            
-            auto M1 = A * root2 * 0.5 - B * root2 * 0.5;
-            auto M2 = A * root2 * 0.5 + B * root2 * 0.5;
-            auto M3 = C * root2 * 0.5 - D * root2 * 0.5;
-            auto M4 = C * root2 * 0.5 + D * root2 * 0.5;
+            auto M1 = A * sine - B * cosine;
+            auto M2 = A * cosine + B * sine;
+            auto M3 = C * sine - D * cosine;
+            auto M4 = C * cosine + D * sine;
             
             feedbackLoop_1[channel] = (M1 * sine - M3 * cosine);
             feedbackLoop_2[channel] = (M1 * cosine + M3 * sine);
