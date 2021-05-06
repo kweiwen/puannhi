@@ -83,12 +83,16 @@ private:
     std::vector<juce::IIRFilter> mFilter_3;
     std::vector<juce::IIRFilter> mFilter_4;
 
+    std::vector<Oscillator> modulator;
+
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mDamp;
     juce::AudioParameterFloat* mDecay;
     juce::AudioParameterFloat* mSpread;
     juce::AudioParameterFloat* mDensity;
     juce::AudioParameterFloat* mTime;
+    juce::AudioParameterFloat* mSpeed;
+    juce::AudioParameterFloat* mAmount;
 
     std::vector<ParameterSmooth> mMixCtrl;
     std::vector<ParameterSmooth> mDampCtrl;
@@ -96,6 +100,8 @@ private:
     std::vector<ParameterSmooth> mSpreadCtrl;
     std::vector<ParameterSmooth> mDensityCtrl;
     std::vector<ParameterSmooth> mTimeCtrl;
+    std::vector<ParameterSmooth> mSpeedCtrl;
+    std::vector<ParameterSmooth> mAmountCtrl;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);

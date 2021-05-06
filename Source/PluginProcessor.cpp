@@ -26,7 +26,9 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
     addParameter    (mDamp       = new juce::AudioParameterFloat  ("0x01",    "Damping",    0.00f,  1.00f,  0.50f));
     addParameter    (mDecay      = new juce::AudioParameterFloat  ("0x02",    "Decay",      0.00f,  1.00f,  0.50f));
     addParameter    (mSpread     = new juce::AudioParameterFloat  ("0x03",    "Spread",     0.00f,  1.00f,  0.50f));
-    addParameter    (mTime       = new juce::AudioParameterFloat  ("0x04",    "Time",       0.50f,  1.00f,  0.50f));
+    addParameter    (mTime       = new juce::AudioParameterFloat  ("0x04",    "Time",       0.10f,  1.00f,  0.50f));
+    addParameter    (mSpeed      = new juce::AudioParameterFloat  ("0x05",    "Speed",      0.01f,  16.0f,  0.10f));
+    addParameter    (mAmount     = new juce::AudioParameterFloat  ("0x06",    "Amount",     1.00f,  50.0f,  10.0f));
     
 }
 
@@ -156,6 +158,12 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         mTimeCtrl.push_back(ParameterSmooth());
         mTimeCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
+        mAmountCtrl.push_back(ParameterSmooth());
+        mAmountCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+
+        mSpeedCtrl.push_back(ParameterSmooth());
+        mSpeedCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
         mFilter_3.push_back(juce::IIRFilter());
@@ -165,6 +173,8 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
         feedbackLoop_2.push_back(0.0f);
         feedbackLoop_3.push_back(0.0f);
         feedbackLoop_4.push_back(0.0f);
+
+        modulator.push_back(Oscillator());
     }
 }
 
@@ -242,6 +252,10 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
         {
             auto timeCtrl = mTimeCtrl[channel].process(mTime->get());
+            auto speedCtrl = mSpeedCtrl[channel].process(mSpeed->get());
+            auto amountCtrl = mAmountCtrl[channel].process(mAmount->get());
+            auto modulation = modulator[channel].process(speedCtrl, getSampleRate(), 0);
+
 
             // ..do something to the data...
             auto drySignal = channelData[sample];
@@ -261,10 +275,10 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             CB_3[channel].writeBuffer(lpf_3);
             CB_4[channel].writeBuffer(lpf_4);
             
-            auto A = CB_1[channel].readBuffer(3264 * timeCtrl);
-            auto B = CB_2[channel].readBuffer(3696 * timeCtrl);
-            auto C = CB_3[channel].readBuffer(4320 * timeCtrl);
-            auto D = CB_4[channel].readBuffer(4752 * timeCtrl);
+            auto A = CB_1[channel].readBuffer(3264 * timeCtrl + modulation * amountCtrl);
+            auto B = CB_2[channel].readBuffer(3696 * timeCtrl + modulation * amountCtrl);
+            auto C = CB_3[channel].readBuffer(4320 * timeCtrl + modulation * amountCtrl);
+            auto D = CB_4[channel].readBuffer(4752 * timeCtrl + modulation * amountCtrl);
             
             channelData[sample] = (A + B + C + D) * mixCtrl + drySignal * (1 - mixCtrl);
             
