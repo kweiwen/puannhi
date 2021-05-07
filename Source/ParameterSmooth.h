@@ -17,7 +17,8 @@ public:
     {
         a = 0;
         b = 0;
-        z = 0;
+        z0 = 0;
+        z1 = 0;
         mSampleRate = 0;
         mSmoothingTimeInMs = 0;
     };
@@ -38,7 +39,8 @@ private:
     float c_twoPi = 6.283185307179586476925286766559f;
     float a;
     float b;
-    float z;
+    float z0;
+    float z1;
     float mSampleRate;
     float mSmoothingTimeInMs;
 };

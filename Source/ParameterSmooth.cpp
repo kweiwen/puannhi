@@ -13,7 +13,8 @@ void ParameterSmooth::createCoefficients(float smoothingTimeInMs, float sampleRa
 {
     a = exp(-c_twoPi / (smoothingTimeInMs * 0.001f * sampleRate));
     b = 1.0f - a;
-    z = 0.0f;
+    z0 = 0.0f;
+    z1 = 0.0f;
     
     mSampleRate = sampleRate;
     mSmoothingTimeInMs = smoothingTimeInMs;
@@ -31,8 +32,17 @@ float ParameterSmooth::getSmoothingTimeInMs()
 
 float ParameterSmooth::process(float input)
 {
-    z = (input * b) + (z * a);
-    return z;
+    z1 = z0;
+    z0 = (input * b) + (z0 * a);
+
+    if (fabsf(z0 - z1) < b * 0.001)
+    {
+        return input;
+    }
+    else
+    {
+        return z0;
+    }
 }
 
 void ParameterSmooth::setSampleRate(float input)
