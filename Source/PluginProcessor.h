@@ -88,24 +88,22 @@ private:
     std::vector<Oscillator> modulator;
 
     juce::AudioParameterFloat* mMix;
+    juce::AudioParameterFloat* mColor;
     juce::AudioParameterFloat* mDamp;
-    juce::AudioParameterFloat* mCutOff;
     juce::AudioParameterFloat* mDecay;
     juce::AudioParameterFloat* mSpread;
-    juce::AudioParameterFloat* mDensity;
     juce::AudioParameterFloat* mSize;
     juce::AudioParameterFloat* mSpeed;
-    juce::AudioParameterFloat* mAmount;
+    juce::AudioParameterFloat* mDepth;
 
     std::vector<ParameterSmooth> mMixCtrl;
-    std::vector<ParameterSmooth> mCutOffCtrl;
+    std::vector<ParameterSmooth> mColorCtrl;
     std::vector<ParameterSmooth> mDampCtrl;
     std::vector<ParameterSmooth> mDecayCtrl;
     std::vector<ParameterSmooth> mSpreadCtrl;
-    std::vector<ParameterSmooth> mDensityCtrl;
     std::vector<ParameterSmooth> mSizeCtrl;
     std::vector<ParameterSmooth> mSpeedCtrl;
-    std::vector<ParameterSmooth> mAmountCtrl;
+    std::vector<ParameterSmooth> mDepthCtrl;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PuannhiAudioProcessor);

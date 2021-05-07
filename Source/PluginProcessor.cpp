@@ -23,13 +23,13 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 #endif
 {
     addParameter    (mMix        = new juce::AudioParameterFloat    ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
-    addParameter    (mCutOff     = new juce::AudioParameterFloat    ("0x01",    "CutOff",     0.00f,  1.00f,  0.50f));
+    addParameter    (mColor     = new juce::AudioParameterFloat     ("0x01",    "Color",      0.00f,  1.00f,  0.50f));
     addParameter    (mDamp       = new juce::AudioParameterFloat    ("0x02",    "Damping",    0.00f,  1.00f,  0.50f));
     addParameter    (mDecay      = new juce::AudioParameterFloat    ("0x03",    "Decay",      0.00f,  1.00f,  0.50f));
     addParameter    (mSpread     = new juce::AudioParameterFloat    ("0x04",    "Spread",     0.00f,  1.00f,  0.50f));
     addParameter    (mSize       = new juce::AudioParameterFloat    ("0x05",    "Size",       0.10f,  1.00f,  0.50f));
     addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x06",    "Speed",      0.01f,  16.0f,  0.10f));
-    addParameter    (mAmount     = new juce::AudioParameterFloat    ("0x07",    "Amount",     1.00f,  50.0f,  10.0f));
+    addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x07",    "Depth",      1.00f,  50.0f,  40.0f));
 }
 
 PuannhiAudioProcessor::~PuannhiAudioProcessor()
@@ -143,28 +143,25 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
         APF_4[index].digitalDelayLine.flushBuffer();
         
         mMixCtrl.push_back(ParameterSmooth());
-        mMixCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
+        mMixCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mDampCtrl.push_back(ParameterSmooth());
         mDampCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
-        mCutOffCtrl.push_back(ParameterSmooth());
-        mCutOffCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mColorCtrl.push_back(ParameterSmooth());
+        mColorCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mDecayCtrl.push_back(ParameterSmooth());
-        mDecayCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
+        mDecayCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mSpreadCtrl.push_back(ParameterSmooth());
-        mSpreadCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
-        
-        mDensityCtrl.push_back(ParameterSmooth());
-        mDensityCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
+        mSpreadCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
         
         mSizeCtrl.push_back(ParameterSmooth());
         mSizeCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
-        mAmountCtrl.push_back(ParameterSmooth());
-        mAmountCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mDepthCtrl.push_back(ParameterSmooth());
+        mDepthCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mSpeedCtrl.push_back(ParameterSmooth());
         mSpeedCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
@@ -235,14 +232,7 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-        auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
-        auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 60 + 15) * TWO_PI / 360;
-        
-        auto sine = sin(spreadCtrl);
-        auto cosine = cos(spreadCtrl);
-        
+    {   
         auto* channelData = buffer.getWritePointer (channel);
         
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
@@ -250,15 +240,20 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             // ..do something to the data...
             auto drySignal = channelData[sample];
 
+            auto mixCtrl = mMixCtrl[channel].process(mMix->get());
+            auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
+            auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 60.0 + 15.0) * TWO_PI / 360;
+            auto sine = sin(spreadCtrl);
+            auto cosine = cos(spreadCtrl);
             auto sizeCtrl = mSizeCtrl[channel].process(mSize->get());
             auto speedCtrl = mSpeedCtrl[channel].process(mSpeed->get());
-            auto amountCtrl = mAmountCtrl[channel].process(mAmount->get());
+            auto depthCtrl = mDepthCtrl[channel].process(mDepth->get());
             auto modulation = modulator[channel].process(speedCtrl, getSampleRate(), 0);
             auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
-            auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
+            auto colorCtrl = mColorCtrl[channel].process(mColor->get());
 
-            auto b0 = cutOffCtrl;
-            auto a1 = cutOffCtrl - 1;
+            auto b0 = colorCtrl;
+            auto a1 = colorCtrl - 1;
 
             mFilter_1[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
             mFilter_2[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
@@ -280,10 +275,10 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             CB_3[channel].writeBuffer(input_3);
             CB_4[channel].writeBuffer(input_4);
             
-            auto A = CB_1[channel].readBuffer(3264.0 * sizeCtrl + modulation * amountCtrl, true);
-            auto B = CB_2[channel].readBuffer(3696.0 * sizeCtrl + modulation * amountCtrl, true);
-            auto C = CB_3[channel].readBuffer(4320.0 * sizeCtrl + modulation * amountCtrl, true);
-            auto D = CB_4[channel].readBuffer(4752.0 * sizeCtrl + modulation * amountCtrl, true);
+            auto A = CB_1[channel].readBuffer(3264.0 * sizeCtrl + modulation * depthCtrl, true);
+            auto B = CB_2[channel].readBuffer(3696.0 * sizeCtrl + modulation * depthCtrl, true);
+            auto C = CB_3[channel].readBuffer(4320.0 * sizeCtrl + modulation * depthCtrl, true);
+            auto D = CB_4[channel].readBuffer(4752.0 * sizeCtrl + modulation * depthCtrl, true);
             
             channelData[sample] = (A + B + C + D) * mixCtrl + drySignal * (1 - mixCtrl);
             
