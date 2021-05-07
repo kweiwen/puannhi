@@ -23,12 +23,13 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 #endif
 {
     addParameter    (mMix        = new juce::AudioParameterFloat  ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
-    addParameter    (mDamp       = new juce::AudioParameterFloat  ("0x01",    "Damping",    0.00f,  1.00f,  0.50f));
-    addParameter    (mDecay      = new juce::AudioParameterFloat  ("0x02",    "Decay",      0.00f,  1.00f,  0.50f));
-    addParameter    (mSpread     = new juce::AudioParameterFloat  ("0x03",    "Spread",     0.00f,  1.00f,  0.50f));
-    addParameter    (mTime       = new juce::AudioParameterFloat  ("0x04",    "Time",       0.10f,  1.00f,  0.50f));
-    addParameter    (mSpeed      = new juce::AudioParameterFloat  ("0x05",    "Speed",      0.01f,  16.0f,  0.10f));
-    addParameter    (mAmount     = new juce::AudioParameterFloat  ("0x06",    "Amount",     1.00f,  50.0f,  10.0f));
+    addParameter    (mCutOff     = new juce::AudioParameterInt    ("0x01",    "CutOff",     20,     7500,   3000));
+    addParameter    (mDamp       = new juce::AudioParameterFloat  ("0x02",    "Damping",    0.00f,  1.00f,  0.50f));
+    addParameter    (mDecay      = new juce::AudioParameterFloat  ("0x03",    "Decay",      0.00f,  1.00f,  0.50f));
+    addParameter    (mSpread     = new juce::AudioParameterFloat  ("0x04",    "Spread",     0.00f,  1.00f,  0.50f));
+    addParameter    (mTime       = new juce::AudioParameterFloat  ("0x05",    "Time",       0.10f,  1.00f,  0.50f));
+    addParameter    (mSpeed      = new juce::AudioParameterFloat  ("0x06",    "Speed",      0.01f,  16.0f,  0.10f));
+    addParameter    (mAmount     = new juce::AudioParameterFloat  ("0x07",    "Amount",     1.00f,  50.0f,  10.0f));
 }
 
 PuannhiAudioProcessor::~PuannhiAudioProcessor()
@@ -113,6 +114,8 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     APF_3.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
     APF_4.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
 
+    mCoefficient.model = 4;
+
     for (int index = 0; index < getTotalNumInputChannels(); index++)
     {
         CB_1[index].createCircularBuffer(8192);
@@ -143,7 +146,10 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
         mMixCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
 
         mDampCtrl.push_back(ParameterSmooth());
-        mDampCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
+        mDampCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+
+        mCutOffCtrl.push_back(ParameterSmooth());
+        mCutOffCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
 
         mDecayCtrl.push_back(ParameterSmooth());
         mDecayCtrl[index].createCoefficients(sampleRate / 8000, sampleRate);
@@ -165,8 +171,6 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
-        mFilter_3.push_back(juce::IIRFilter());
-        mFilter_4.push_back(juce::IIRFilter());
         
         feedbackLoop_1.push_back(0.0f);
         feedbackLoop_2.push_back(0.0f);
@@ -231,17 +235,8 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-        auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
         auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
         auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 60 + 15) * TWO_PI / 360;
-
-        auto b0 = (1 - dampCtrl);
-        auto a1 = -dampCtrl;
-        
-        mFilter_1[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
-        mFilter_2[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
-        mFilter_3[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
-        mFilter_4[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
         
         auto sine = sin(spreadCtrl);
         auto cosine = cos(spreadCtrl);
@@ -254,19 +249,32 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto speedCtrl = mSpeedCtrl[channel].process(mSpeed->get());
             auto amountCtrl = mAmountCtrl[channel].process(mAmount->get());
             auto modulation = modulator[channel].process(speedCtrl, getSampleRate(), 0);
+            auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
+            auto cutOffCtrl = mCutOffCtrl[channel].process(mCutOff->get());
 
             // ..do something to the data...
             auto drySignal = channelData[sample];
+
+            mCoefficient.setParameter(cutOffCtrl, getSampleRate(), 0.0, 0.0, 0.0);
+
+            mFilter_1[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
+
+            mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
 
             auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(drySignal + feedbackLoop_1[channel] * decayCtrl);
             auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(drySignal + feedbackLoop_3[channel] * decayCtrl);
             auto lpf_3 = drySignal + feedbackLoop_2[channel] * decayCtrl;
             auto lpf_4 = drySignal + feedbackLoop_4[channel] * decayCtrl;
-            
-//            auto apf_1 = APF_1[channel].processGerzon(lpf_1, 541, densityCtrl);
-//            auto apf_2 = APF_1[channel].processGerzon(lpf_2, 113, densityCtrl);
-//            auto apf_3 = APF_1[channel].processGerzon(lpf_3, 181, densityCtrl);
-//            auto apf_4 = APF_1[channel].processGerzon(lpf_4, 31, densityCtrl);
             
             CB_1[channel].writeBuffer(lpf_1);
             CB_2[channel].writeBuffer(lpf_2);

@@ -72,6 +72,8 @@ private:
     std::unique_ptr<DelayAPF<float>[]> APF_2;
     std::unique_ptr<DelayAPF<float>[]> APF_3;
     std::unique_ptr<DelayAPF<float>[]> APF_4;
+
+    FilterDesigner mCoefficient;
     
     std::vector<float> feedbackLoop_1;
     std::vector<float> feedbackLoop_2;
@@ -87,6 +89,7 @@ private:
 
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mDamp;
+    juce::AudioParameterInt* mCutOff;
     juce::AudioParameterFloat* mDecay;
     juce::AudioParameterFloat* mSpread;
     juce::AudioParameterFloat* mDensity;
@@ -95,6 +98,7 @@ private:
     juce::AudioParameterFloat* mAmount;
 
     std::vector<ParameterSmooth> mMixCtrl;
+    std::vector<ParameterSmooth> mCutOffCtrl;
     std::vector<ParameterSmooth> mDampCtrl;
     std::vector<ParameterSmooth> mDecayCtrl;
     std::vector<ParameterSmooth> mSpreadCtrl;
