@@ -23,7 +23,7 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 #endif
 {
     addParameter    (mMix        = new juce::AudioParameterFloat  ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
-    addParameter    (mCutOff     = new juce::AudioParameterInt    ("0x01",    "CutOff",     20,     7500,   3000));
+    addParameter    (mCutOff     = new juce::AudioParameterInt    ("0x01",    "CutOff",     250,    12000,  3000));
     addParameter    (mDamp       = new juce::AudioParameterFloat  ("0x02",    "Damping",    0.00f,  1.00f,  0.50f));
     addParameter    (mDecay      = new juce::AudioParameterFloat  ("0x03",    "Decay",      0.00f,  1.00f,  0.50f));
     addParameter    (mSpread     = new juce::AudioParameterFloat  ("0x04",    "Spread",     0.00f,  1.00f,  0.50f));
@@ -171,6 +171,8 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
+        mFilter_3.push_back(juce::IIRFilter());
+        mFilter_4.push_back(juce::IIRFilter());
         
         feedbackLoop_1.push_back(0.0f);
         feedbackLoop_2.push_back(0.0f);
@@ -271,15 +273,36 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
                 mCoefficient.getCoefficients()[4],
                 mCoefficient.getCoefficients()[5]));
 
-            auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(drySignal + feedbackLoop_1[channel] * decayCtrl);
-            auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(drySignal + feedbackLoop_3[channel] * decayCtrl);
-            auto lpf_3 = drySignal + feedbackLoop_2[channel] * decayCtrl;
-            auto lpf_4 = drySignal + feedbackLoop_4[channel] * decayCtrl;
+            mFilter_3[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
+
+            mFilter_4[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
+
+            auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(drySignal);
+            auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(drySignal);
+            auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(drySignal);
+            auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(drySignal);
+
+            //channelData[sample] = (lpf_1 - drySignal) * dampCtrl + drySignal;
+
+            auto input_1 = drySignal + (lpf_1 - feedbackLoop_1[channel]) * dampCtrl + feedbackLoop_1[channel];
+            auto input_2 = drySignal + (lpf_2 - feedbackLoop_2[channel]) * dampCtrl + feedbackLoop_2[channel];
+            auto input_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl + feedbackLoop_3[channel];
+            auto input_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl + feedbackLoop_4[channel];
             
-            CB_1[channel].writeBuffer(lpf_1);
-            CB_2[channel].writeBuffer(lpf_2);
-            CB_3[channel].writeBuffer(lpf_3);
-            CB_4[channel].writeBuffer(lpf_4);
+            CB_1[channel].writeBuffer(input_1);
+            CB_2[channel].writeBuffer(input_2);
+            CB_3[channel].writeBuffer(input_3);
+            CB_4[channel].writeBuffer(input_4);
             
             auto A = CB_1[channel].readBuffer(3264 * timeCtrl + modulation * amountCtrl);
             auto B = CB_2[channel].readBuffer(3696 * timeCtrl + modulation * amountCtrl);
@@ -293,10 +316,10 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto M3 = C * sine - D * cosine;
             auto M4 = C * cosine + D * sine;
             
-            feedbackLoop_1[channel] = (M1 * sine - M3 * cosine);
-            feedbackLoop_2[channel] = (M1 * cosine + M3 * sine);
-            feedbackLoop_3[channel] = (M2 * sine - M4 * cosine);
-            feedbackLoop_4[channel] = (M2 * cosine + M4 * sine);
+            feedbackLoop_1[channel] = (M1 * sine - M3 * cosine) * decayCtrl;
+            feedbackLoop_2[channel] = (M1 * cosine + M3 * sine) * decayCtrl;
+            feedbackLoop_3[channel] = (M2 * sine - M4 * cosine) * decayCtrl;
+            feedbackLoop_4[channel] = (M2 * cosine + M4 * sine) * decayCtrl;
         }
     }
 }
