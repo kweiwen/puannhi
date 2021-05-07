@@ -23,13 +23,14 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 #endif
 {
     addParameter    (mMix        = new juce::AudioParameterFloat    ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
-    addParameter    (mColor     = new juce::AudioParameterFloat     ("0x01",    "Color",      0.00f,  1.00f,  0.50f));
-    addParameter    (mDamp       = new juce::AudioParameterFloat    ("0x02",    "Damping",    0.00f,  1.00f,  0.50f));
-    addParameter    (mDecay      = new juce::AudioParameterFloat    ("0x03",    "Decay",      0.00f,  1.00f,  0.50f));
-    addParameter    (mSpread     = new juce::AudioParameterFloat    ("0x04",    "Spread",     0.00f,  1.00f,  0.50f));
-    addParameter    (mSize       = new juce::AudioParameterFloat    ("0x05",    "Size",       0.10f,  1.00f,  0.50f));
-    addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x06",    "Speed",      0.01f,  16.0f,  0.10f));
-    addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x07",    "Depth",      1.00f,  50.0f,  40.0f));
+    addParameter    (mPreDelay   = new juce::AudioParameterInt      ("0x01",    "Pre-Delay",  0,      50,     0));
+    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x02",    "Color",      0.00f,  1.00f,  0.50f));
+    addParameter    (mDamp       = new juce::AudioParameterFloat    ("0x03",    "Damping",    0.00f,  1.00f,  0.50f));
+    addParameter    (mDecay      = new juce::AudioParameterFloat    ("0x04",    "Decay",      0.00f,  1.05f,  0.50f));
+    addParameter    (mSpread     = new juce::AudioParameterFloat    ("0x05",    "Spread",     0.00f,  1.00f,  0.50f));
+    addParameter    (mSize       = new juce::AudioParameterFloat    ("0x06",    "Size",       0.10f,  1.00f,  0.50f));
+    addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x07",    "Speed",      0.1f,   30.0f,  1.00f));
+    addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x08",    "Depth",      1.00f,  50.0f,  40.0f));
 }
 
 PuannhiAudioProcessor::~PuannhiAudioProcessor()
@@ -114,6 +115,8 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     APF_3.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
     APF_4.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
 
+    PreDelay.reset(new DelayFeedback<float>[getTotalNumInputChannels()]);
+
     mCoefficient.model = 4;
 
     for (int index = 0; index < getTotalNumInputChannels(); index++)
@@ -141,9 +144,15 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 
         APF_4[index].digitalDelayLine.createCircularBuffer(8192);
         APF_4[index].digitalDelayLine.flushBuffer();
+
+        PreDelay[index].digitalDelayLine.createCircularBuffer(sampleRate * 0.05);
+        PreDelay[index].digitalDelayLine.flushBuffer();
         
         mMixCtrl.push_back(ParameterSmooth());
         mMixCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+
+        mPreDelayCtrl.push_back(ParameterSmooth());
+        mPreDelayCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mDampCtrl.push_back(ParameterSmooth());
         mDampCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
@@ -240,9 +249,11 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             // ..do something to the data...
             auto drySignal = channelData[sample];
 
+            // ramping process 
             auto mixCtrl = mMixCtrl[channel].process(mMix->get());
+            auto preDelayCtrl = mPreDelayCtrl[channel].process(mPreDelay->get()) / 1000;
             auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
-            auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 60.0 + 15.0) * TWO_PI / 360;
+            auto spreadCtrl = (mSpreadCtrl[channel].process(mSpread->get()) * 80.0 + 5.0) * TWO_PI / 360;
             auto sine = sin(spreadCtrl);
             auto cosine = cos(spreadCtrl);
             auto sizeCtrl = mSizeCtrl[channel].process(mSize->get());
@@ -280,7 +291,7 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto C = CB_3[channel].readBuffer(4320.0 * sizeCtrl + modulation * depthCtrl, true);
             auto D = CB_4[channel].readBuffer(4752.0 * sizeCtrl + modulation * depthCtrl, true);
             
-            channelData[sample] = (A + B + C + D) * mixCtrl + drySignal * (1 - mixCtrl);
+            channelData[sample] = PreDelay[channel].process((A + B + C + D), preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
             
             feedbackLoop_1[channel] = ( (A * sine - B * cosine) * sine   - (C * sine - D * cosine) * cosine  ) * decayCtrl;
             feedbackLoop_2[channel] = ( (A * sine - B * cosine) * cosine + (C * sine - D * cosine) * sine    ) * decayCtrl;
