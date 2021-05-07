@@ -22,12 +22,12 @@
 
 const bool debug = false;
 
-class CircularBufferAudioProcessor  : public juce::AudioProcessor
+class PuannhiAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    CircularBufferAudioProcessor();
-    ~CircularBufferAudioProcessor() override;
+    PuannhiAudioProcessor();
+    ~PuannhiAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -104,5 +104,5 @@ private:
     std::vector<ParameterSmooth> mAmountCtrl;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CircularBufferAudioProcessor);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PuannhiAudioProcessor);
 };

@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-CircularBufferAudioProcessor::CircularBufferAudioProcessor()
+PuannhiAudioProcessor::PuannhiAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -29,20 +29,19 @@ CircularBufferAudioProcessor::CircularBufferAudioProcessor()
     addParameter    (mTime       = new juce::AudioParameterFloat  ("0x04",    "Time",       0.10f,  1.00f,  0.50f));
     addParameter    (mSpeed      = new juce::AudioParameterFloat  ("0x05",    "Speed",      0.01f,  16.0f,  0.10f));
     addParameter    (mAmount     = new juce::AudioParameterFloat  ("0x06",    "Amount",     1.00f,  50.0f,  10.0f));
-    
 }
 
-CircularBufferAudioProcessor::~CircularBufferAudioProcessor()
+PuannhiAudioProcessor::~PuannhiAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String CircularBufferAudioProcessor::getName() const
+const juce::String PuannhiAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool CircularBufferAudioProcessor::acceptsMidi() const
+bool PuannhiAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -51,7 +50,7 @@ bool CircularBufferAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool CircularBufferAudioProcessor::producesMidi() const
+bool PuannhiAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -60,7 +59,7 @@ bool CircularBufferAudioProcessor::producesMidi() const
    #endif
 }
 
-bool CircularBufferAudioProcessor::isMidiEffect() const
+bool PuannhiAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -69,37 +68,37 @@ bool CircularBufferAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double CircularBufferAudioProcessor::getTailLengthSeconds() const
+double PuannhiAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int CircularBufferAudioProcessor::getNumPrograms()
+int PuannhiAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int CircularBufferAudioProcessor::getCurrentProgram()
+int PuannhiAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void CircularBufferAudioProcessor::setCurrentProgram (int index)
+void PuannhiAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String CircularBufferAudioProcessor::getProgramName (int index)
+const juce::String PuannhiAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void CircularBufferAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void PuannhiAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
@@ -178,14 +177,14 @@ void CircularBufferAudioProcessor::prepareToPlay (double sampleRate, int samples
     }
 }
 
-void CircularBufferAudioProcessor::releaseResources()
+void PuannhiAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool CircularBufferAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool PuannhiAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -208,7 +207,7 @@ bool CircularBufferAudioProcessor::isBusesLayoutSupported (const BusesLayout& la
 }
 #endif
 
-void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
@@ -256,7 +255,6 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
             auto amountCtrl = mAmountCtrl[channel].process(mAmount->get());
             auto modulation = modulator[channel].process(speedCtrl, getSampleRate(), 0);
 
-
             // ..do something to the data...
             auto drySignal = channelData[sample];
 
@@ -296,26 +294,26 @@ void CircularBufferAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
 }
 
 //==============================================================================
-bool CircularBufferAudioProcessor::hasEditor() const
+bool PuannhiAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* CircularBufferAudioProcessor::createEditor()
+juce::AudioProcessorEditor* PuannhiAudioProcessor::createEditor()
 {
     return new NewProjectAudioProcessorEditor (*this);
 //    return nullptr;
 }
 
 //==============================================================================
-void CircularBufferAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void PuannhiAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void CircularBufferAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void PuannhiAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
@@ -325,5 +323,5 @@ void CircularBufferAudioProcessor::setStateInformation (const void* data, int si
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new CircularBufferAudioProcessor();
+    return new PuannhiAudioProcessor();
 }
