@@ -32,6 +32,19 @@ void FilterDesigner::setCoefficients()
 		a2 = 0;
 		break;
 	case E_LOW_PASS_1:
+		b1 = pow(EULER, -omega);
+
+		// numerator
+		a0 = (1.0 - b1) * gain;
+		a1 = 0.0;
+		a2 = 0.0;
+
+		// denominator
+		b1 = -b1;
+		b2 = 0.0;
+
+		// set b0 into 1 after coefficients normalization 
+		b0 = 1;
 		break;
 	case E_LOW_PASS_2:
 		alpha = sine_omega / (2 * q);
@@ -50,6 +63,19 @@ void FilterDesigner::setCoefficients()
 		b0 = 1;
 		break;
 	case E_HIGH_PASS_1:
+		b1 = pow(EULER, -omega);
+
+		// numerator
+		a0 = (1.0 + b1) * gain / 2;
+		a1 = -(1.0 + b1) * gain / 2;
+		a2 = 0.0;
+
+		// denominator
+		b1 = -b1;
+		b2 = 0.0;
+
+		// set b0 into 1 after coefficients normalization 
+		b0 = 1;
 		break;
 	case E_HIGH_PASS_2:
 		alpha = sine_omega / (2 * q);
@@ -68,8 +94,35 @@ void FilterDesigner::setCoefficients()
 		b0 = 1;
 		break;
 	case E_ALL_PASS_1:
+		b1 = pow(EULER, -omega);
+
+		// numerator
+		a0 = -b1 * gain;
+		a1 = gain;
+		a2 = 0.0;
+
+		// denominator
+		b1 = -b1;
+		b2 = 0.0;
+
+		// set b0 into 1 after coefficients normalization 
+		b0 = 1;
 		break;
 	case E_ALL_PASS_2:
+		alpha = sine_omega / (2 * q);
+
+		// denominator normalization
+		b0 = 1 + alpha;
+		b1 = (-2 * cosine_omega) / b0;
+		b2 = (1 - alpha) / b0;
+
+		// numerator normalization
+		a0 = (1 - alpha) * gain / b0;
+		a1 = (-2 * cosine_omega) * gain / b0;
+		a2 = (1 + alpha) * gain / b0;
+
+		// set b0 into 1 after coefficients normalization 
+		b0 = 1;
 		break;
 	case E_PEAK:
 		break;
