@@ -301,7 +301,7 @@ bool PuannhiAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* PuannhiAudioProcessor::createEditor()
 {
-    return new NewProjectAudioProcessorEditor (*this);
+    return new PuannhiAudioProcessorEditor (*this);
 //    return nullptr;
 }
 
