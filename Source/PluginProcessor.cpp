@@ -30,7 +30,7 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
     addParameter    (mSpread     = new juce::AudioParameterFloat    ("0x05",    "Spread",     0.00f,  1.00f,  0.50f));
     addParameter    (mSize       = new juce::AudioParameterFloat    ("0x06",    "Size",       0.01f,  1.00f,  0.50f));
     addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x07",    "Speed",      0.1f,   30.0f,  1.00f));
-    addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x08",    "Depth",      1.00f,  50.0f,  40.0f));
+    addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x08",    "Depth",      0.0f,   100.0f, 40.0f));
 }
 
 PuannhiAudioProcessor::~PuannhiAudioProcessor()
@@ -286,10 +286,10 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             CB_3[channel].writeBuffer(input_3);
             CB_4[channel].writeBuffer(input_4);
             
-            auto A = CB_1[channel].readBuffer(fabsf(3264.0 * sizeCtrl + modulation * depthCtrl) + 1, true);
-            auto B = CB_2[channel].readBuffer(fabsf(3696.0 * sizeCtrl + modulation * depthCtrl) + 1, true);
-            auto C = CB_3[channel].readBuffer(fabsf(4320.0 * sizeCtrl + modulation * depthCtrl) + 1, true);
-            auto D = CB_4[channel].readBuffer(fabsf(4752.0 * sizeCtrl + modulation * depthCtrl) + 1, true);
+            auto A = CB_1[channel].readBuffer((3264.0 + modulation * depthCtrl) * sizeCtrl, true);
+            auto B = CB_2[channel].readBuffer((3696.0 + modulation * depthCtrl) * sizeCtrl, true);
+            auto C = CB_3[channel].readBuffer((4320.0 + modulation * depthCtrl) * sizeCtrl, true);
+            auto D = CB_4[channel].readBuffer((4752.0 + modulation * depthCtrl) * sizeCtrl, true);
             
             channelData[sample] = PreDelay[channel].process((A + B + C + D), preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
             
