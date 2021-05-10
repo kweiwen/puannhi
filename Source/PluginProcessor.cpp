@@ -306,7 +306,7 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             CB_3[channel].writeBuffer(output_3);
             CB_4[channel].writeBuffer(output_4);
 
-            channelData[sample] = PreDelay[channel].process((A + B + C + D) * 0.25, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
+            channelData[sample] = PreDelay[channel].process((A + B + C + D) * 0.25f, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }
 }
