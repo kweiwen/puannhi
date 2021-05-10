@@ -68,11 +68,6 @@ private:
     std::unique_ptr<CircularBuffer<float>[]> CB_3;
     std::unique_ptr<CircularBuffer<float>[]> CB_4;
 
-    std::unique_ptr<DelayAPF<float>[]> APF_1;
-    std::unique_ptr<DelayAPF<float>[]> APF_2;
-    std::unique_ptr<DelayAPF<float>[]> APF_3;
-    std::unique_ptr<DelayAPF<float>[]> APF_4;
-
     std::unique_ptr<DelayFeedback<float>[]> PreDelay;
 
     FilterDesigner mCoefficient;
@@ -90,7 +85,7 @@ private:
     std::vector<Oscillator> modulator;
 
     juce::AudioParameterFloat* mMix;
-    juce::AudioParameterInt* mPreDelay;
+    juce::AudioParameterFloat* mPreDelay;
     juce::AudioParameterFloat* mColor;
     juce::AudioParameterFloat* mDamp;
     juce::AudioParameterFloat* mDecay;

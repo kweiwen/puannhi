@@ -23,8 +23,8 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 #endif
 {
     addParameter    (mMix        = new juce::AudioParameterFloat    ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
-    addParameter    (mPreDelay   = new juce::AudioParameterInt      ("0x01",    "Pre-Delay",  0,      50,     0));
-    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x02",    "Color",      0.00f,  1.00f,  0.50f));
+    addParameter    (mPreDelay   = new juce::AudioParameterFloat    ("0x01",    "Pre-Delay",  0.00f,  50.0f,  0.00f));
+    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x02",    "Color",      0,      7500,   1500));
     addParameter    (mDamp       = new juce::AudioParameterFloat    ("0x03",    "Damping",    0.00f,  1.00f,  0.50f));
     addParameter    (mDecay      = new juce::AudioParameterFloat    ("0x04",    "Decay",      0.00f,  1.05f,  0.50f));
     addParameter    (mSpread     = new juce::AudioParameterFloat    ("0x05",    "Spread",     0.00f,  1.00f,  0.50f));
@@ -110,11 +110,6 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     CB_3.reset(new CircularBuffer<float>[getTotalNumInputChannels()]);
     CB_4.reset(new CircularBuffer<float>[getTotalNumInputChannels()]);
 
-    APF_1.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
-    APF_2.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
-    APF_3.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
-    APF_4.reset(new DelayAPF<float>[getTotalNumInputChannels()]);
-
     PreDelay.reset(new DelayFeedback<float>[getTotalNumInputChannels()]);
 
     mCoefficient.model = 4;
@@ -133,47 +128,35 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
         CB_4[index].createCircularBuffer(8192);
         CB_4[index].flushBuffer();
 
-        APF_1[index].digitalDelayLine.createCircularBuffer(8192);
-        APF_1[index].digitalDelayLine.flushBuffer();
-
-        APF_2[index].digitalDelayLine.createCircularBuffer(8192);
-        APF_2[index].digitalDelayLine.flushBuffer();
-
-        APF_3[index].digitalDelayLine.createCircularBuffer(8192);
-        APF_3[index].digitalDelayLine.flushBuffer();
-
-        APF_4[index].digitalDelayLine.createCircularBuffer(8192);
-        APF_4[index].digitalDelayLine.flushBuffer();
-
         PreDelay[index].digitalDelayLine.createCircularBuffer(sampleRate * 0.05);
         PreDelay[index].digitalDelayLine.flushBuffer();
         
         mMixCtrl.push_back(ParameterSmooth());
-        mMixCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mMixCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mPreDelayCtrl.push_back(ParameterSmooth());
         mPreDelayCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mDampCtrl.push_back(ParameterSmooth());
-        mDampCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mDampCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mColorCtrl.push_back(ParameterSmooth());
-        mColorCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mColorCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mDecayCtrl.push_back(ParameterSmooth());
-        mDecayCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mDecayCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mSpreadCtrl.push_back(ParameterSmooth());
-        mSpreadCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mSpreadCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
         
         mSizeCtrl.push_back(ParameterSmooth());
-        mSizeCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mSizeCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mDepthCtrl.push_back(ParameterSmooth());
-        mDepthCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mDepthCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mSpeedCtrl.push_back(ParameterSmooth());
-        mSpeedCtrl[index].createCoefficients(sampleRate / 100, sampleRate);
+        mSpeedCtrl[index].createCoefficients(sampleRate * 0.001, sampleRate);
 
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
@@ -263,40 +246,67 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
             auto colorCtrl = mColorCtrl[channel].process(mColor->get());
 
-            auto b0 = colorCtrl;
-            auto a1 = colorCtrl - 1;
+            feedbackLoop_1[channel] = CB_1[channel].readBuffer(2819);
+            feedbackLoop_2[channel] = CB_2[channel].readBuffer(3343);
+            feedbackLoop_3[channel] = CB_3[channel].readBuffer(3581);
+            feedbackLoop_4[channel] = CB_4[channel].readBuffer(4133);
 
-            mFilter_1[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
-            mFilter_2[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
-            mFilter_3[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
-            mFilter_4[channel].setCoefficients(juce::IIRCoefficients(b0, 0.0f, 0.0f, 1, a1, 0.0f));
+            mCoefficient.setParameter(colorCtrl, getSampleRate(), 0, 0, 0);
+
+            mFilter_1[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
+
+            mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
+
+            mFilter_3[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
+
+            mFilter_4[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
+                mCoefficient.getCoefficients()[1],
+                mCoefficient.getCoefficients()[2],
+                mCoefficient.getCoefficients()[3],
+                mCoefficient.getCoefficients()[4],
+                mCoefficient.getCoefficients()[5]));
 
             auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_1[channel]);
             auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_2[channel]);
             auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(feedbackLoop_3[channel]);
             auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(feedbackLoop_4[channel]);
 
-            auto input_1 = drySignal + (lpf_1 - feedbackLoop_1[channel]) * dampCtrl + feedbackLoop_1[channel];
-            auto input_2 = drySignal + (lpf_2 - feedbackLoop_2[channel]) * dampCtrl + feedbackLoop_2[channel];
-            auto input_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl + feedbackLoop_3[channel];
-            auto input_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl + feedbackLoop_4[channel];
-            
-            CB_1[channel].writeBuffer(input_1);
-            CB_2[channel].writeBuffer(input_2);
-            CB_3[channel].writeBuffer(input_3);
-            CB_4[channel].writeBuffer(input_4);
-            
-            auto A = CB_1[channel].readBuffer((3264.0 + modulation * depthCtrl) * sizeCtrl, true);
-            auto B = CB_2[channel].readBuffer((3696.0 + modulation * depthCtrl) * sizeCtrl, true);
-            auto C = CB_3[channel].readBuffer((4320.0 + modulation * depthCtrl) * sizeCtrl, true);
-            auto D = CB_4[channel].readBuffer((4752.0 + modulation * depthCtrl) * sizeCtrl, true);
-            
-            channelData[sample] = PreDelay[channel].process((A + B + C + D), preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
-            
-            feedbackLoop_1[channel] = ( (A * sine - B * cosine) * sine   - (C * sine - D * cosine) * cosine  ) * decayCtrl;
-            feedbackLoop_2[channel] = ( (A * sine - B * cosine) * cosine + (C * sine - D * cosine) * sine    ) * decayCtrl;
-            feedbackLoop_3[channel] = ( (A * cosine + B * sine) * sine   - (C * cosine + D * sine) * cosine  ) * decayCtrl;
-            feedbackLoop_4[channel] = ( (A * cosine + B * sine) * cosine + (C * cosine + D * sine) * sine    ) * decayCtrl;
+            auto damp_output_1 = (lpf_1 - feedbackLoop_1[channel]) * dampCtrl;
+            auto damp_output_2 = (lpf_2 - feedbackLoop_2[channel]) * dampCtrl;
+            auto damp_output_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl;
+            auto damp_output_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl;
+
+            auto A = (damp_output_1 + feedbackLoop_1[channel]) * 0.5f * decayCtrl + drySignal;
+            auto B = (damp_output_2 + feedbackLoop_2[channel]) * 0.5f * decayCtrl + drySignal;
+            auto C = (damp_output_3 + feedbackLoop_3[channel]) * 0.5f * decayCtrl;
+            auto D = (damp_output_4 + feedbackLoop_4[channel]) * 0.5f * decayCtrl;
+                        
+            auto output_1 = (A + B + C + D);
+            auto output_2 = (A - B + C - D);
+            auto output_3 = (A + B - C - D);
+            auto output_4 = (A - B - C + D);
+
+            CB_1[channel].writeBuffer(output_1);
+            CB_2[channel].writeBuffer(output_2);
+            CB_3[channel].writeBuffer(output_3);
+            CB_4[channel].writeBuffer(output_4);
+
+            channelData[sample] = PreDelay[channel].process(A, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }
 }
