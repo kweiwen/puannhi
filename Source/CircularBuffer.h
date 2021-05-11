@@ -32,9 +32,9 @@ public:
     T readBuffer(int delayInSamples);
     T readBuffer(double delayInFractionalSamples, bool interpolate = true);
     
-    static float doLinearInterpolation(float y1, float y2, float fractional_X);
-    static float doHermitInterpolation(float y1, float y2, float fractional_X);
-    static float doLagrangeInterpolation(float y1, float y2, float fractional_X);
+    float doLinearInterpolation(float delayInFractionalSamples);
+    float doHermitInterpolation(float delayInFractionalSamples);
+    float doLagrangeInterpolation(float delayInFractionalSamples);
     
 private:
     std::unique_ptr<T[]> mBuffer = nullptr;
@@ -96,34 +96,62 @@ T CircularBuffer<T>::readBuffer(double delayInFractionalSamples, bool interpolat
     // --- else do interpolation
     else
     {
-        // --- read the sample at n+1 (one sample OLDER)
-        T y2 = readBuffer((int)delayInFractionalSamples + 1);
-        // --- get fractional part
-        double fraction = delayInFractionalSamples - (int) delayInFractionalSamples;
-        // --- do the interpolation (you could try different types here)
-        return doLinearInterpolation(y1, y2, fraction);
+        return doHermitInterpolation(delayInFractionalSamples);
     }
 }
 
 template<typename T>
-inline float CircularBuffer<T>::doLinearInterpolation(float y1, float y2, float fractional_X)
+float CircularBuffer<T>::doLinearInterpolation(float delayInFractionalSamples)
 {
-    if (fractional_X >= 1.0) return y2;
-    return fractional_X * y2 + (1 - fractional_X)*y1;
+    float y1 = readBuffer((int)delayInFractionalSamples);
+    float y2 = readBuffer((int)delayInFractionalSamples + 1);
+    float fraction = delayInFractionalSamples - (int)delayInFractionalSamples;
+
+    if (fraction >= 1.0) return y2;
+    return fraction * y2 + (1 - fraction) * y1;
 }
 
 template<typename T>
-inline float CircularBuffer<T>::doHermitInterpolation(float y1, float y2, float fractional_X)
+float CircularBuffer<T>::doHermitInterpolation(float delayInFractionalSamples)
 {
-    if (fractional_X >= 1.0) return y2;
-    return fractional_X * y2 + (1 - fractional_X)*y1;
+    int index = (int)delayInFractionalSamples;
+    float xm1 = readBuffer(index - 1);;
+    float x0 = readBuffer(index);
+    float x1 = readBuffer(index + 1);
+    float x2 = readBuffer(index + 2);
+
+    float frac_pos = delayInFractionalSamples - (int)delayInFractionalSamples;
+
+    const float c = (x1 - xm1) * 0.5f;
+    const float v = x0 - x1;
+    const float w = c + v;
+    const float a = w + v + (x2 - x0) * 0.5f;
+    const float b_neg = w + a;
+    return ((((a * frac_pos) - b_neg) * frac_pos + c) * frac_pos + x0);
 }
 
 template<typename T>
-inline float CircularBuffer<T>::doLagrangeInterpolation(float y1, float y2, float fractional_X)
+float CircularBuffer<T>::doLagrangeInterpolation(float delayInFractionalSamples)
 {
-    if (fractional_X >= 1.0) return y2;
-    return fractional_X * y2 + (1 - fractional_X)*y1;
+    int n = 4;
+    int index = (int)delayInFractionalSamples;
+    float x[4] = { index - 1, index, index + 1, index + 2 };
+    float y[4] = { readBuffer(index - 1), readBuffer(index), readBuffer(index + 1), readBuffer(index + 2) };
+
+    float interpolation = 0;
+    for (int i = 0; i < n; i++)
+    {
+        float term = y[i];
+        for (int j = 0; j < n; j++)
+        {
+            if (j != i)
+            {
+                term = term * (delayInFractionalSamples - x[j]) / (float)(x[i] - x[j]);
+            }
+        }
+        interpolation += term;
+    }
+    return interpolation;
 }
 
 
