@@ -115,16 +115,16 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 
     for (int index = 0; index < getTotalNumInputChannels(); index++)
     {
-        CB_1[index].createCircularBuffer(8192);
+        CB_1[index].createCircularBuffer(4096);
         CB_1[index].flushBuffer();
 
-        CB_2[index].createCircularBuffer(8192);
+        CB_2[index].createCircularBuffer(4096);
         CB_2[index].flushBuffer();
 
-        CB_3[index].createCircularBuffer(8192);
+        CB_3[index].createCircularBuffer(4096);
         CB_3[index].flushBuffer();
 
-        CB_4[index].createCircularBuffer(8192);
+        CB_4[index].createCircularBuffer(4096);
         CB_4[index].flushBuffer();
 
         PreDelay[index].digitalDelayLine.createCircularBuffer(8192);
@@ -234,34 +234,10 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         auto depthCtrl = mDepthCtrl[channel].process(mDepth->get());
 
         mCoefficient.setParameter(colorCtrl, getSampleRate(), 0, 0, 0);
-        
-        mFilter_1[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
-            0,
-            0,
-            mCoefficient.getCoefficients()[3],
-            mCoefficient.getCoefficients()[4],
-            0));
-
-        mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
-            0,
-            0,
-            mCoefficient.getCoefficients()[3],
-            mCoefficient.getCoefficients()[4],
-            0));
-
-        mFilter_3[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
-            0,
-            0,
-            mCoefficient.getCoefficients()[3],
-            mCoefficient.getCoefficients()[4],
-            0));
-
-        mFilter_4[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0],
-            0,
-            0,
-            mCoefficient.getCoefficients()[3],
-            mCoefficient.getCoefficients()[4],
-            0));
+        mFilter_1[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
+        mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
+        mFilter_3[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
+        mFilter_4[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
 
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
         {
@@ -272,7 +248,6 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto preDelayCtrl = mPreDelayCtrl[channel].process(mPreDelay->get()) / 1000;
             auto sizeCtrl = mSizeCtrl[channel].process(mSize->get());
 
-            
             auto modulation_1 = modulator_1[channel].process(speedCtrl, getSampleRate(), 0, 0);
             auto modulation_2 = modulator_2[channel].process(speedCtrl, getSampleRate(), 0, 0.25 * TWO_PI);
             auto modulation_3 = modulator_3[channel].process(speedCtrl, getSampleRate(), 0, 0.50 * TWO_PI);
