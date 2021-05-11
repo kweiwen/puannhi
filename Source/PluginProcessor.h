@@ -82,14 +82,16 @@ private:
     std::vector<juce::IIRFilter> mFilter_3;
     std::vector<juce::IIRFilter> mFilter_4;
 
-    std::vector<Oscillator> modulator;
+    std::vector<Oscillator> modulator_1;
+    std::vector<Oscillator> modulator_2;
+    std::vector<Oscillator> modulator_3;
+    std::vector<Oscillator> modulator_4;
 
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mPreDelay;
     juce::AudioParameterFloat* mColor;
     juce::AudioParameterFloat* mDamp;
     juce::AudioParameterFloat* mDecay;
-    juce::AudioParameterFloat* mSpread;
     juce::AudioParameterFloat* mSize;
     juce::AudioParameterFloat* mSpeed;
     juce::AudioParameterFloat* mDepth;
@@ -99,7 +101,6 @@ private:
     std::vector<ParameterSmooth> mColorCtrl;
     std::vector<ParameterSmooth> mDampCtrl;
     std::vector<ParameterSmooth> mDecayCtrl;
-    std::vector<ParameterSmooth> mSpreadCtrl;
     std::vector<ParameterSmooth> mSizeCtrl;
     std::vector<ParameterSmooth> mSpeedCtrl;
     std::vector<ParameterSmooth> mDepthCtrl;
