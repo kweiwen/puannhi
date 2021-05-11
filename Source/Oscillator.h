@@ -38,7 +38,7 @@ public:
 	{
 	};
 
-	double process(double frequency, double sampleRate, int model);
+	double process(double frequency, double sampleRate, int model, double offset);
 	double currentAngle;
 	double sine(double angle);
 	double triangle(double angle);
@@ -51,30 +51,30 @@ private:
 	double currentSample;
 };
 
-inline double Oscillator::process(double frequency, double sampleRate, int model)
+inline double Oscillator::process(double frequency, double sampleRate, int model, double offset)
 {
 	switch (model)
 	{
 	case E_SINE:
-		currentSample = sine(currentAngle);
+		currentSample = sine(currentAngle + offset);
 		break;
 	case E_TRIANGLE:
-		currentSample = triangle(currentAngle);
+		currentSample = triangle(currentAngle + offset);
 		break;
 	case E_SAWTOOTH:
-		currentSample = sawtooth(currentAngle);
+		currentSample = sawtooth(currentAngle + offset);
 		break;
 	case E_TRAPEZOID:
-		currentSample = trapezoid(currentAngle);
+		currentSample = trapezoid(currentAngle + offset);
 		break;
 	case E_SQUARE:
-		currentSample = square(currentAngle);
+		currentSample = square(currentAngle + offset);
 		break;
     case E_PHASOR:
-        currentSample = phasor(currentAngle);
+        currentSample = phasor(currentAngle + offset);
         break;
     case E_PHASOR_INV:
-        currentSample = phasor(currentAngle+TWO_PI/2);
+        currentSample = phasor(currentAngle + TWO_PI/2 + offset);
         break;
 	}
 	currentAngle = currentAngle + TWO_PI * frequency / sampleRate;
