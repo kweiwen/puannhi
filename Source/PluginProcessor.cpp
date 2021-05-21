@@ -24,11 +24,11 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 {
     addParameter    (mMix        = new juce::AudioParameterFloat    ("0x00",    "Mixing",     0.00f,  1.00f,  0.50f));
     addParameter    (mPreDelay   = new juce::AudioParameterFloat    ("0x01",    "Pre-Delay",  0.00f,  150.0f, 0.00f));
-    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x02",    "Color",      150,    5000,   1000));
+    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x02",    "Brightness", 150,    5000,   1000));
     addParameter    (mDamp       = new juce::AudioParameterFloat    ("0x03",    "Damping",    0.00f,  1.00f,  0.50f));
     addParameter    (mDecay      = new juce::AudioParameterFloat    ("0x04",    "Decay",      0.00f,  1.00f,  0.50f));
-    addParameter    (mSize       = new juce::AudioParameterFloat    ("0x06",    "Size",       0.01f,  1.00f,  0.50f));
-    addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x07",    "Speed",      0.1f,   8.00f,  1.00f));
+    addParameter    (mSize       = new juce::AudioParameterFloat    ("0x06",    "Size",       0.01f,  1.00f,  1.00f));
+    addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x07",    "Speed",      0.1f,   4.00f,  1.00f));
     addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x08",    "Depth",      0.0f,   100.0f, 40.0f));
 }
 
@@ -283,7 +283,7 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             CB_3[channel].writeBuffer(output_3);
             CB_4[channel].writeBuffer(output_4);
 
-            channelData[sample] = PreDelay[channel].process((A + B + C + D) * 0.25f, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
+            channelData[sample] = PreDelay[channel].process(output_1 * 0.25f, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
         }
     }
 }
