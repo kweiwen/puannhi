@@ -30,6 +30,10 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
     addParameter    (mSize       = new juce::AudioParameterFloat    ("0x06",    "Size",       0.01f,  1.00f,  1.00f));
     addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x07",    "Speed",      0.1f,   4.00f,  1.00f));
     addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x08",    "Depth",      0.0f,   100.0f, 40.0f));
+    addParameter    (mGainFS     = new juce::AudioParameterFloat    ("0x09",    "GainFS",     -48.0f, 6.0f,   0.0f));
+    addParameter    (mGainFA     = new juce::AudioParameterFloat    ("0x0A",    "GainFA",     -48.0f, 6.0f,   0.0f));
+    addParameter    (mGainRA     = new juce::AudioParameterFloat    ("0x0B",    "GainRA",     -48.0f, 6.0f,   0.0f));
+    updateFFTsize(2048);
 }
 
 PuannhiAudioProcessor::~PuannhiAudioProcessor()
@@ -101,6 +105,8 @@ void PuannhiAudioProcessor::changeProgramName (int index, const juce::String& ne
 //==============================================================================
 void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    updateFFTsize(2048);
+
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     
@@ -154,6 +160,15 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
         mSpeedCtrl.push_back(ParameterSmooth());
         mSpeedCtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
 
+        mGainFSCtrl.push_back(ParameterSmooth());
+        mGainFSCtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
+
+        mGainFACtrl.push_back(ParameterSmooth());
+        mGainFACtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
+
+        mGainRACtrl.push_back(ParameterSmooth());
+        mGainRACtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
+
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
         mFilter_3.push_back(juce::IIRFilter());
@@ -168,6 +183,8 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
         modulator_2.push_back(Oscillator());
         modulator_3.push_back(Oscillator());
         modulator_4.push_back(Oscillator());
+
+
     }
 }
 
@@ -204,87 +221,82 @@ bool PuannhiAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) 
 void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
+    // number of samples per buffer
+    const int numSamples = buffer.getNumSamples();
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {   
-        auto* channelData = buffer.getWritePointer (channel);
+    // input channels
+    auto channelData_left = buffer.getReadPointer(0);
+    auto channelData_right = buffer.getReadPointer(1);
 
-        auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-        auto speedCtrl = mSpeedCtrl[channel].process(mSpeed->get());
-        auto decayCtrl = mDecayCtrl[channel].process(mDecay->get());
-        auto dampCtrl = mDampCtrl[channel].process(mDamp->get());
-        auto colorCtrl = mColorCtrl[channel].process(mColor->get());
-        auto depthCtrl = mDepthCtrl[channel].process(mDepth->get());
+    // output channels
+    float* const ChannelDataOut_1 = buffer.getWritePointer(0);
+    float* const ChannelDataOut_2 = buffer.getWritePointer(1);
+    float* const ChannelDataOut_3 = buffer.getWritePointer(2);
+    float* const ChannelDataOut_4 = buffer.getWritePointer(3);
+    float* const ChannelDataOut_5 = buffer.getWritePointer(4);
 
-        mCoefficient.setParameter(colorCtrl, getSampleRate(), 0, 0, 0);
-        mFilter_1[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
-        mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
-        mFilter_3[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
-        mFilter_4[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
+    // main STFT analysis loop
+    for (int sample = 0; sample < numSamples; ++sample) {
+        // input sample per channel
+        timeDomainBuffer_left[sample].real(channelData_left[sample]);
+        timeDomainBuffer_left[sample].imag(0.0f);
 
-        for (int sample = 0; sample < buffer.getNumSamples(); sample++)
-        {
-            // ..do something to the data...
-            auto drySignal = channelData[sample];
+        timeDomainBuffer_right[sample].real(channelData_right[sample]);
+        timeDomainBuffer_right[sample].imag(0.0f);
+    }
 
-            // ramping process 
-            auto preDelayCtrl = mPreDelayCtrl[channel].process(mPreDelay->get()) / 1000;
-            auto sizeCtrl = mSizeCtrl[channel].process(mSize->get());
+    // FFT - Analysis
+    fft->perform(timeDomainBuffer_left, frequencyDomainBuffer_left, false);
+    fft->perform(timeDomainBuffer_right, frequencyDomainBuffer_right, false);
 
-            auto modulation_1 = modulator_1[channel].process(speedCtrl, getSampleRate(), 0, 0);
-            auto modulation_2 = modulator_2[channel].process(speedCtrl, getSampleRate(), 0, 0.25 * TWO_PI);
-            auto modulation_3 = modulator_3[channel].process(speedCtrl, getSampleRate(), 0, 0.50 * TWO_PI);
-            auto modulation_4 = modulator_4[channel].process(speedCtrl, getSampleRate(), 0, 0.75 * TWO_PI);
+    // declare const var for Direct Component calculation
+    // exp(i*0.6*pi) = cos(0.6*pi) + i*sin(0.6*pi) = tmpExp
+    std::complex<float> tmpExp(-0.30901699437, -0.30901699437);
 
-            feedbackLoop_1[channel] = CB_1[channel].readBuffer((2819.0f + modulation_1 * depthCtrl)* sizeCtrl, true);
-            feedbackLoop_2[channel] = CB_2[channel].readBuffer((3343.0f + modulation_2 * depthCtrl)* sizeCtrl, true);
-            feedbackLoop_3[channel] = CB_3[channel].readBuffer((3581.0f + modulation_3 * depthCtrl)* sizeCtrl, true);
-            feedbackLoop_4[channel] = CB_4[channel].readBuffer((4133.0f + modulation_4 * depthCtrl)* sizeCtrl, true);
+    auto gainFSCtrl = pow(10, mGainFSCtrl[0].process(mGainFS->get()) / 20 );
+    auto gainFACtrl = pow(10, mGainFACtrl[0].process(mGainFA->get()) / 20 );
+    auto gainRACtrl = pow(10, mGainRACtrl[0].process(mGainRA->get()) / 20 );
 
-            auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_1[channel]);
-            auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_2[channel]);
-            auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(feedbackLoop_3[channel]);
-            auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(feedbackLoop_4[channel]);
+    // Main Upmixing Processing Loop
+    for (int sample = 0; sample < numSamples; ++sample) {
+        // calculation of Panning Coefficients
+        float aL = abs(frequencyDomainBuffer_left[sample]) / sqrt(abs(frequencyDomainBuffer_left[sample]) * abs(frequencyDomainBuffer_left[sample]) + abs(frequencyDomainBuffer_right[sample]) * abs(frequencyDomainBuffer_right[sample]));
+        float aR = abs(frequencyDomainBuffer_right[sample]) / sqrt(abs(frequencyDomainBuffer_left[sample]) * abs(frequencyDomainBuffer_left[sample]) + abs(frequencyDomainBuffer_right[sample]) * abs(frequencyDomainBuffer_right[sample]));
 
-            auto damp_output_1 = (lpf_1 - feedbackLoop_1[channel]) * dampCtrl;
-            auto damp_output_2 = (lpf_2 - feedbackLoop_2[channel]) * dampCtrl;
-            auto damp_output_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl;
-            auto damp_output_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl;
 
-            auto A = (damp_output_1 + feedbackLoop_1[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
-            auto B = (damp_output_2 + feedbackLoop_2[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
-            auto C = (damp_output_3 + feedbackLoop_3[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
-            auto D = (damp_output_4 + feedbackLoop_4[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
-                        
-            auto output_1 = (A + B + C + D);
-            auto output_2 = (A - B + C - D);
-            auto output_3 = (A + B - C - D);
-            auto output_4 = (A - B - C + D);
+        // calculation of Direct Component
+        Direct[sample] = (frequencyDomainBuffer_left[sample] * tmpExp - frequencyDomainBuffer_right[sample]) / (aL * tmpExp - aR);
 
-            CB_1[channel].writeBuffer(output_1);
-            CB_2[channel].writeBuffer(output_2);
-            CB_3[channel].writeBuffer(output_3);
-            CB_4[channel].writeBuffer(output_4);
+        // calculation of Ambient(L&R) Components
+        DL[sample] = Direct[sample] * aL;
+        DR[sample] = Direct[sample] * aR;
+        NL[sample] = frequencyDomainBuffer_left[sample] - DL[sample];
+        NR[sample] = frequencyDomainBuffer_right[sample] - DR[sample];
 
-            channelData[sample] = PreDelay[channel].process(output_1 * 0.25f, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
-        }
+        // up-mixing Direct Component
+        // sqrt(0.5) = 0.70710678118
+        DC_mag[sample] = (float)0.70710678118 * (abs(DL[sample] + DR[sample]) - abs(DL[sample] - DR[sample])); // Center Channel Magnitude
+        float nl_dbl_min = std::numeric_limits<float>::min();
+        DC[sample] = ((DL[sample] + DR[sample]) * DC_mag[sample]) / (abs(DL[sample] + DR[sample]) + nl_dbl_min); // Calculation of Center Channel
+        CL[sample] = DL[sample] - DC[sample] * (float)0.70710678118; // Calculation of Left & Right Channels
+        CR[sample] = DR[sample] - DC[sample] * (float)0.70710678118; // Calculation of Left & Right Channels
+    }
+
+    // iFFT - Synthesis
+    fft->perform(CL, timeDomain_DL, true);
+    fft->perform(CR, timeDomain_DR, true);
+    fft->perform(DC, timeDomain_DC, true);
+    fft->perform(NL, timeDomain_NL, true);
+    fft->perform(NR, timeDomain_NR, true);
+
+    // main STFT synthesis loop
+    for (int sample = 0; sample < numSamples; ++sample) {
+        ChannelDataOut_1[sample] = (timeDomain_DL[sample].real() * gainFSCtrl) + (timeDomain_NL[sample].real() * gainFACtrl);
+        ChannelDataOut_2[sample] = (timeDomain_DR[sample].real() * gainFSCtrl) + (timeDomain_NR[sample].real() * gainFACtrl);
+        ChannelDataOut_3[sample] = timeDomain_DC[sample].real();
+        ChannelDataOut_4[sample] = timeDomain_NL[sample].real() * gainRACtrl;
+        ChannelDataOut_5[sample] = timeDomain_NR[sample].real() * gainRACtrl;
     }
 }
 
