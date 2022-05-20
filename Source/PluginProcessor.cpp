@@ -265,31 +265,11 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto temp2 = feedbackLoop_1[channel] * sinf(rad_0) + feedbackLoop_2[channel] * cosf(rad_0);
             auto temp3 = feedbackLoop_3[channel] * cosf(rad_0) - feedbackLoop_4[channel] * sinf(rad_0);
             auto temp4 = feedbackLoop_3[channel] * sinf(rad_0) + feedbackLoop_4[channel] * cosf(rad_0);
-
-//            auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_1[channel]);
-//            auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_2[channel]);
-//            auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(feedbackLoop_3[channel]);
-//            auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(feedbackLoop_4[channel]);
             
             auto output_1 = temp1 * cosf(rad_1) - temp3 * sinf(rad_1);
             auto output_2 = temp1 * sinf(rad_1) + temp3 * cosf(rad_1);
             auto output_3 = temp2 * cosf(rad_1) - temp4 * sinf(rad_1);
             auto output_4 = temp2 * sinf(rad_1) + temp4 * cosf(rad_1);
-
-//            auto damp_output_1 = (lpf_1 - feedbackLoop_1[channel]) * dampCtrl;
-//            auto damp_output_2 = (lpf_2 - feedbackLoop_2[channel]) * dampCtrl;
-//            auto damp_output_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl;
-//            auto damp_output_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl;
-//
-//            auto A = (damp_output_1 + feedbackLoop_1[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
-//            auto B = (damp_output_2 + feedbackLoop_2[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
-//            auto C = (damp_output_3 + feedbackLoop_3[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
-//            auto D = (damp_output_4 + feedbackLoop_4[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
-//
-//            auto output_1 = (A + B + C + D);
-//            auto output_2 = (A - B + C - D);
-//            auto output_3 = (A + B - C - D);
-//            auto output_4 = (A - B - C + D);
 
             CB_1[channel].writeBuffer(drySignal + output_1 * sizeCtrl);
             CB_2[channel].writeBuffer(drySignal + output_2 * sizeCtrl);
