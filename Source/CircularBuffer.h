@@ -135,7 +135,7 @@ float CircularBuffer<T>::doLagrangeInterpolation(float delayInFractionalSamples)
 {
     int n = 4;
     int index = (int)delayInFractionalSamples;
-    float x[4] = { index - 1, index, index + 1, index + 2 };
+    float x[4] = { float(index - 1), float(index), float(index + 1), float(index + 2) };
     float y[4] = { readBuffer(index - 1), readBuffer(index), readBuffer(index + 1), readBuffer(index + 2) };
 
     float interpolation = 0;

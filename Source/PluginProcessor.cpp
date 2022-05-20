@@ -238,6 +238,9 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
         mFilter_3[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
         mFilter_4[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
+        
+        auto rad_0 = 0.125 * TWO_PI;
+        auto rad_1 = 0.125 * TWO_PI;
 
         for (int sample = 0; sample < buffer.getNumSamples(); sample++)
         {
@@ -248,40 +251,50 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto preDelayCtrl = mPreDelayCtrl[channel].process(mPreDelay->get()) / 1000;
             auto sizeCtrl = mSizeCtrl[channel].process(mSize->get());
 
-            auto modulation_1 = modulator_1[channel].process(speedCtrl, getSampleRate(), 0, 0);
-            auto modulation_2 = modulator_2[channel].process(speedCtrl, getSampleRate(), 0, 0.25 * TWO_PI);
-            auto modulation_3 = modulator_3[channel].process(speedCtrl, getSampleRate(), 0, 0.50 * TWO_PI);
-            auto modulation_4 = modulator_4[channel].process(speedCtrl, getSampleRate(), 0, 0.75 * TWO_PI);
+            auto modulation_1 = modulator_1[channel].process(speedCtrl, getSampleRate(), 0.0f, 0.0f);
+            auto modulation_2 = modulator_2[channel].process(speedCtrl * 1.005f, getSampleRate(), 0, 0.25f * TWO_PI);
+            auto modulation_3 = modulator_3[channel].process(speedCtrl * 1.005f * 1.005f, getSampleRate(), 0, 0.50f * TWO_PI);
+            auto modulation_4 = modulator_4[channel].process(speedCtrl * 1.005f * 1.005f * 1.005f, getSampleRate(), 0, 0.75f * TWO_PI);
 
-            feedbackLoop_1[channel] = CB_1[channel].readBuffer((2819.0f + modulation_1 * depthCtrl)* sizeCtrl, true);
-            feedbackLoop_2[channel] = CB_2[channel].readBuffer((3343.0f + modulation_2 * depthCtrl)* sizeCtrl, true);
-            feedbackLoop_3[channel] = CB_3[channel].readBuffer((3581.0f + modulation_3 * depthCtrl)* sizeCtrl, true);
-            feedbackLoop_4[channel] = CB_4[channel].readBuffer((4133.0f + modulation_4 * depthCtrl)* sizeCtrl, true);
+            feedbackLoop_1[channel] = CB_1[channel].readBuffer((887.0f + modulation_1 * depthCtrl), true);
+            feedbackLoop_2[channel] = CB_2[channel].readBuffer((1913.0f + modulation_2 * depthCtrl), true);
+            feedbackLoop_3[channel] = CB_3[channel].readBuffer((3967.0f + modulation_3 * depthCtrl), true);
+            feedbackLoop_4[channel] = CB_4[channel].readBuffer((8053.0f + modulation_4 * depthCtrl), true);
+            
+            auto temp1 = feedbackLoop_1[channel] * cosf(rad_0) - feedbackLoop_2[channel] * sinf(rad_0);
+            auto temp2 = feedbackLoop_1[channel] * sinf(rad_0) + feedbackLoop_2[channel] * cosf(rad_0);
+            auto temp3 = feedbackLoop_3[channel] * cosf(rad_0) - feedbackLoop_4[channel] * sinf(rad_0);
+            auto temp4 = feedbackLoop_3[channel] * sinf(rad_0) + feedbackLoop_4[channel] * cosf(rad_0);
 
-            auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_1[channel]);
-            auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_2[channel]);
-            auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(feedbackLoop_3[channel]);
-            auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(feedbackLoop_4[channel]);
+//            auto lpf_1 = mFilter_1[channel].processSingleSampleRaw(feedbackLoop_1[channel]);
+//            auto lpf_2 = mFilter_2[channel].processSingleSampleRaw(feedbackLoop_2[channel]);
+//            auto lpf_3 = mFilter_3[channel].processSingleSampleRaw(feedbackLoop_3[channel]);
+//            auto lpf_4 = mFilter_4[channel].processSingleSampleRaw(feedbackLoop_4[channel]);
+            
+            auto output_1 = temp1 * cosf(rad_1) - temp3 * sinf(rad_1);
+            auto output_2 = temp1 * sinf(rad_1) + temp3 * cosf(rad_1);
+            auto output_3 = temp2 * cosf(rad_1) - temp4 * sinf(rad_1);
+            auto output_4 = temp2 * sinf(rad_1) + temp4 * cosf(rad_1);
 
-            auto damp_output_1 = (lpf_1 - feedbackLoop_1[channel]) * dampCtrl;
-            auto damp_output_2 = (lpf_2 - feedbackLoop_2[channel]) * dampCtrl;
-            auto damp_output_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl;
-            auto damp_output_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl;
+//            auto damp_output_1 = (lpf_1 - feedbackLoop_1[channel]) * dampCtrl;
+//            auto damp_output_2 = (lpf_2 - feedbackLoop_2[channel]) * dampCtrl;
+//            auto damp_output_3 = (lpf_3 - feedbackLoop_3[channel]) * dampCtrl;
+//            auto damp_output_4 = (lpf_4 - feedbackLoop_4[channel]) * dampCtrl;
+//
+//            auto A = (damp_output_1 + feedbackLoop_1[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
+//            auto B = (damp_output_2 + feedbackLoop_2[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
+//            auto C = (damp_output_3 + feedbackLoop_3[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
+//            auto D = (damp_output_4 + feedbackLoop_4[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
+//
+//            auto output_1 = (A + B + C + D);
+//            auto output_2 = (A - B + C - D);
+//            auto output_3 = (A + B - C - D);
+//            auto output_4 = (A - B - C + D);
 
-            auto A = (damp_output_1 + feedbackLoop_1[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
-            auto B = (damp_output_2 + feedbackLoop_2[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75) + drySignal;
-            auto C = (damp_output_3 + feedbackLoop_3[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
-            auto D = (damp_output_4 + feedbackLoop_4[channel]) * 0.5f * (decayCtrl * 0.25 + 0.75);
-                        
-            auto output_1 = (A + B + C + D);
-            auto output_2 = (A - B + C - D);
-            auto output_3 = (A + B - C - D);
-            auto output_4 = (A - B - C + D);
-
-            CB_1[channel].writeBuffer(output_1);
-            CB_2[channel].writeBuffer(output_2);
-            CB_3[channel].writeBuffer(output_3);
-            CB_4[channel].writeBuffer(output_4);
+            CB_1[channel].writeBuffer(drySignal + output_1 * sizeCtrl);
+            CB_2[channel].writeBuffer(drySignal + output_2 * sizeCtrl);
+            CB_3[channel].writeBuffer(mFilter_1[channel].processSingleSampleRaw(output_3 * sizeCtrl));
+            CB_4[channel].writeBuffer(mFilter_2[channel].processSingleSampleRaw(output_4 * sizeCtrl));
 
             channelData[sample] = PreDelay[channel].process(output_1 * 0.25f, preDelayCtrl * getSampleRate() + 1, 0, 1) * mixCtrl + drySignal * (1 - mixCtrl);
         }
