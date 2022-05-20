@@ -95,7 +95,6 @@ private:
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mPreDelay;
     juce::AudioParameterFloat* mColor;
-    juce::AudioParameterFloat* mSpread;
     juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mDecay;
     juce::AudioParameterFloat* mShimmer;
