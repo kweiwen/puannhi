@@ -24,11 +24,11 @@ PuannhiAudioProcessor::PuannhiAudioProcessor()
 {
     addParameter    (mPitch      = new juce::AudioParameterInt      ("0x00",    "Pitch",      -12,    12,     0));
     addParameter    (mPreDelay   = new juce::AudioParameterFloat    ("0x02",    "Pre-Delay",  0.00f,  300.0f, 270.0f));
-    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x03",    "Brightness", 150,    5000,   1000));
+    addParameter    (mColor      = new juce::AudioParameterFloat    ("0x03",    "Brightness", 150,    5000,   2500));
     addParameter    (mSpread     = new juce::AudioParameterFloat    ("0x04",    "Spread",     0.00f,  1.00f,  0.50f));
     addParameter    (mFeedback   = new juce::AudioParameterFloat    ("0x05",    "Feedback",   0.00f,  1.00f,  0.150f));
     addParameter    (mDecay      = new juce::AudioParameterFloat    ("0x06",    "Decay",      0.01f,  1.00f,  0.50f));
-    addParameter    (mSpeed      = new juce::AudioParameterFloat    ("0x07",    "Speed",      0.1f,   4.00f,  1.00f));
+    addParameter    (mShimmer    = new juce::AudioParameterFloat    ("0x07",    "Shimmer",    0.0f,   1.00f,  1.00f));
     addParameter    (mDepth      = new juce::AudioParameterFloat    ("0x08",    "Depth",      0.0f,   100.0f, 40.0f));
     addParameter    (mMix        = new juce::AudioParameterFloat    ("0x01",    "Mixing",     0.00f,  1.00f,  0.50f));
 }
@@ -165,8 +165,8 @@ void PuannhiAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
         mDepthCtrl.push_back(ParameterSmooth());
         mDepthCtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
 
-        mSpeedCtrl.push_back(ParameterSmooth());
-        mSpeedCtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
+        mShimmerCtrl.push_back(ParameterSmooth());
+        mShimmerCtrl[index].createCoefficients(sampleRate * 0.0001, sampleRate);
 
         mFilter_1.push_back(juce::IIRFilter());
         mFilter_2.push_back(juce::IIRFilter());
@@ -244,10 +244,19 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
         
         auto colorCtrl = mColorCtrl[channel].process(mColor->get());
         mCoefficient.setParameter(colorCtrl, getSampleRate(), 0, 0, 0);
-        mFilter_1[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
-        mFilter_2[channel].setCoefficients(juce::IIRCoefficients(mCoefficient.getCoefficients()[0], 0, 0, mCoefficient.getCoefficients()[3], mCoefficient.getCoefficients()[4], 0));
-
-        mHighPass[channel].setCoefficients(juce::IIRCoefficients(0.994975f, -1.989950f, 0.994975f, 1.0, -1.989925f, 0.989976f));
+        
+        
+        auto coef = mCoefficient.getCoefficients();
+        mFilter_1[channel].setCoefficients(juce::IIRCoefficients(coef[0], coef[1], coef[2], coef[3], coef[4], coef[5]));
+        mFilter_2[channel].setCoefficients(juce::IIRCoefficients(coef[0], coef[1], coef[2], coef[3], coef[4], coef[5]));
+        
+        auto b0 = 0.9929267154013539;
+        auto b1 = -0.9929267154013539;
+        auto b2 = 0.0;
+        auto a0 = 1.0f;
+        auto a1 = -0.9858534308027079;
+        auto a2 = 0.0;
+        mHighPass[channel].setCoefficients(juce::IIRCoefficients(b0, b1, b2, a0, a1, a2));
         
         auto rad_fixed = 0.125 * TWO_PI;
 
@@ -260,13 +269,10 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto preDelayCtrl = mPreDelayCtrl[channel].process(mPreDelay->get()) * 0.001f;
             auto feedbackCtrl = mFeedbackCtrl[channel].process(mFeedback->get());
             auto pitchCtrl = ((powf(2, (mPitchCtrl[channel].process(mPitch->get()) / 12.0f))) - 1.0f) * -20.0f;
-            auto mixCtrl = mMixCtrl[channel].process(mMix->get());
-            
+            auto shimmerCtrl = mShimmerCtrl[channel].process(mShimmer->get());
             auto decayCtrl = mDecayCtrl[channel].process(mDecay->get()) * 0.5f + 0.5f;
             auto depthCtrl = mDepthCtrl[channel].process(mDepth->get());
-            
-//            auto speedCtrl = mSpeedCtrl[channel].process(mSpeed->get());
-//            auto spreadCtrl = mSpreadCtrl[channel].process(mSpread->get());
+            auto mixCtrl = mMixCtrl[channel].process(mMix->get());
             
             // pitch shifter
             auto phasor_1 = pitch_modulator_1[channel].process(pitchCtrl, getSampleRate(), 5, 0.0f);
@@ -275,20 +281,20 @@ void PuannhiAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce
             auto window_2 = ((cosf(TWO_PI * phasor_2) * -1.0f) + 1.0f) / 2.0f;
             auto delay_1 = Pitch_CB_1[channel].process(drySignal, phasor_1 * getSampleRate() * 0.05f, 0, 1.0f) * window_1;
             auto delay_2 = Picth_CB_2[channel].process(drySignal, phasor_2 * getSampleRate() * 0.05f, 0, 1.0f) * window_2;
-            auto pitched_output = (delay_1 + delay_2) * 0.25f;
+            auto shimmer_output = ((delay_1 + delay_2) * shimmerCtrl + drySignal * (1 - shimmerCtrl)) * 0.25f;
             
             // early reflection
             auto temp = Pre_Delay[channel].readBuffer(preDelayCtrl * getSampleRate() + 1, true);
-            auto t3 = All_Pass_Delay[channel].processSchroeder(temp, 7001, 0.75f);
+            auto t3 = All_Pass_Delay[channel].processSchroeder(temp, 7001, 0.75f) * 0.5;
             auto t2 = t3 * feedbackCtrl;
-            auto t1 = mHighPass[channel].processSingleSampleRaw(pitched_output + t2);
+            auto t1 = mHighPass[channel].processSingleSampleRaw(shimmer_output + t2);
             Pre_Delay[channel].writeBuffer(t1);
             
             // room reverberation
-            auto modulation_1 = modulator_1[channel].process(1, getSampleRate(), 0, 0.0f);
-            auto modulation_2 = modulator_2[channel].process(1.005f, getSampleRate(), 0, 0.25f * TWO_PI);
-            auto modulation_3 = modulator_3[channel].process(1.005f * 1.005f, getSampleRate(), 0, 0.50f * TWO_PI);
-            auto modulation_4 = modulator_4[channel].process(1.005f * 1.005f * 1.005f, getSampleRate(), 0, 0.75f * TWO_PI);
+            auto modulation_1 = modulator_1[channel].process(1,                         getSampleRate(), 0, 0.0f);
+            auto modulation_2 = modulator_2[channel].process(1.005f,                    getSampleRate(), 0, 0.25f * TWO_PI);
+            auto modulation_3 = modulator_3[channel].process(1.005f * 1.005f,           getSampleRate(), 0, 0.50f * TWO_PI);
+            auto modulation_4 = modulator_4[channel].process(1.005f * 1.005f * 1.005f,  getSampleRate(), 0, 0.75f * TWO_PI);
 
             feedbackLoop_1[channel] = CB_1[channel].readBuffer((1942.0f + modulation_1 * depthCtrl), true);
             feedbackLoop_2[channel] = CB_2[channel].readBuffer((2880.0f + modulation_2 * depthCtrl), true);

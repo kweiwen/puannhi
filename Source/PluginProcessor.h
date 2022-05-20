@@ -98,7 +98,7 @@ private:
     juce::AudioParameterFloat* mSpread;
     juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mDecay;
-    juce::AudioParameterFloat* mSpeed;
+    juce::AudioParameterFloat* mShimmer;
     juce::AudioParameterFloat* mDepth;
     
     std::vector<ParameterSmooth> mPitchCtrl;
@@ -108,7 +108,7 @@ private:
     std::vector<ParameterSmooth> mSpreadCtrl;
     std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mDecayCtrl;
-    std::vector<ParameterSmooth> mSpeedCtrl;
+    std::vector<ParameterSmooth> mShimmerCtrl;
     std::vector<ParameterSmooth> mDepthCtrl;
 
     //==============================================================================
