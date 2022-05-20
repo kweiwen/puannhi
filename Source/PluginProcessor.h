@@ -63,13 +63,15 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
 private:
+    std::unique_ptr<DelayFeedback<float>[]> Pitch_CB_1;
+    std::unique_ptr<DelayFeedback<float>[]> Picth_CB_2;
+    std::unique_ptr<DelayAPF<float>[]> All_Pass_Delay;
+    std::unique_ptr<CircularBuffer<float>[]> Pre_Delay;
     std::unique_ptr<CircularBuffer<float>[]> CB_1;
     std::unique_ptr<CircularBuffer<float>[]> CB_2;
     std::unique_ptr<CircularBuffer<float>[]> CB_3;
     std::unique_ptr<CircularBuffer<float>[]> CB_4;
-
-    std::unique_ptr<DelayFeedback<float>[]> PreDelay;
-
+    
     FilterDesigner mCoefficient;
     
     std::vector<float> feedbackLoop_1;
@@ -79,29 +81,33 @@ private:
 
     std::vector<juce::IIRFilter> mFilter_1;
     std::vector<juce::IIRFilter> mFilter_2;
-    std::vector<juce::IIRFilter> mFilter_3;
-    std::vector<juce::IIRFilter> mFilter_4;
+    std::vector<juce::IIRFilter> mHighPass;
 
+    std::vector<Oscillator> pitch_modulator_1;
+    std::vector<Oscillator> pitch_modulator_2;
     std::vector<Oscillator> modulator_1;
     std::vector<Oscillator> modulator_2;
     std::vector<Oscillator> modulator_3;
     std::vector<Oscillator> modulator_4;
-
+    std::vector<Oscillator> spread_osc;
+    
+    juce::AudioParameterInt* mPitch;
     juce::AudioParameterFloat* mMix;
     juce::AudioParameterFloat* mPreDelay;
     juce::AudioParameterFloat* mColor;
-    juce::AudioParameterFloat* mDamp;
+    juce::AudioParameterFloat* mSpread;
+    juce::AudioParameterFloat* mFeedback;
     juce::AudioParameterFloat* mDecay;
-    juce::AudioParameterFloat* mSize;
     juce::AudioParameterFloat* mSpeed;
     juce::AudioParameterFloat* mDepth;
-
+    
+    std::vector<ParameterSmooth> mPitchCtrl;
     std::vector<ParameterSmooth> mMixCtrl;
     std::vector<ParameterSmooth> mPreDelayCtrl;
     std::vector<ParameterSmooth> mColorCtrl;
-    std::vector<ParameterSmooth> mDampCtrl;
+    std::vector<ParameterSmooth> mSpreadCtrl;
+    std::vector<ParameterSmooth> mFeedbackCtrl;
     std::vector<ParameterSmooth> mDecayCtrl;
-    std::vector<ParameterSmooth> mSizeCtrl;
     std::vector<ParameterSmooth> mSpeedCtrl;
     std::vector<ParameterSmooth> mDepthCtrl;
 
