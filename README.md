@@ -1,4 +1,4 @@
-# Puannhi - An asynchronous time-variant feedback delay networks reverberation
+# Puannhi - An asynchronous, time-variant feedback delay networks for reverberation
 
 Shoutout to Professor Sebastian J. Schlecht! 
 
