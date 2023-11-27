@@ -41,7 +41,7 @@
 namespace ProjectInfo
 {
     const char* const  projectName    = "FeedbackDelayNetwork";
-    const char* const  companyName    = "Lava Music";
+    const char* const  companyName    = "SikhaaElectronics";
     const char* const  versionString  = "1.0.0";
     const int          versionNumber  = 0x10000;
 }
