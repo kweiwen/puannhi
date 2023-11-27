@@ -5,4 +5,4 @@
 
 */
 
-#include <juce_dsp/juce_dsp.cpp>
+#include <juce_audio_processors/juce_audio_processors_ara.cpp>
