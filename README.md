@@ -7,7 +7,7 @@ Whenever my colleagues or music-friends ask how I created such a cool effect, I 
 
 $\mathbf{A(n)}$: The feedback **matrix** itself. It changes over time, whic is denoted by the index $n$. 
 
-$\mathbf{A(0)}$: This is the initial feedback **matrix**. Serving as the starting point for the time-variant modulation process.
+$\mathbf{A(0)}$: This is the initial feedback **matrix**. Serving as the starting point for the time-variant modulation process. Chosen to be a unitary matrix
 
 $\mathbf{U}$: Unitary matrix.
 
