@@ -41,4 +41,4 @@ A(n) &= A(0) \mathbf{U} K^{\Phi(n)} \mathbf{U}^H \\
 \end{align}
 $$
 
-It would be much easier to implement in ProcessBySample compared to ProcessByBlock; however, I have discovered another approach to modulate the FDN, inspired by matrix modulation, which modulates the delay time of the delay lines itself.
+It would be much easier to implement this Time-Variant FDN in `ProcessBySample()` compared to `ProcessByBlock()`; however, I have discovered another approach to modulate the FDN, inspired by matrix modulation, which modulates the delay time of the delay lines itself.
