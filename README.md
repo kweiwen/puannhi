@@ -41,8 +41,13 @@ A(n) &= A(0) \mathbf{U} K^{\Phi(n)} \mathbf{U}^H \\
 \end{align}
 $$
 
-When it comes to implementation, it would be much easier to implement this Time-Variant FDN in `ProcessBySample()` compared to `ProcessByBlock()`; however, I have discovered another approach to modulate the FDN, inspired by matrix modulation, which modulates the delay time of the delay lines itself. The modulation function of $f_1(n)$, $f_2(n)$, $f_3(n)$, and $f_4(n)$ are sine waves in the current implementation, and it can be substituted for any shapes of waveform. 
+When it comes to implementation, it would be much easier to implement this Time-Variant FDN in `ProcessBySample()` compared to `ProcessByBlock()`; however, I have discovered another approach to modulate the FDN, inspired by matrix modulation, which modulates the delay time of the delay lines itself. The modulation function of $f_1(n)$, $f_2(n)$, $f_3(n)$, and $f_4(n)$ are sine waves in the current implementation, and they can be substituted for any shapes of the waveform. 
 
 <p align="center">
 <img src="https://github.com/kweiwen/puannhi/assets/15021145/565e187f-701d-4f9e-ac7e-062b86b5de8f.JPG" width="480">
 </p>
+
+<p align="center">
+<img width="150" alt="287506598-784f91fc-1f11-4963-afcd-6a64766bb22d" src="https://github.com/kweiwen/puannhi/assets/15021145/231b339c-d9b9-4170-ba9f-4aa86feae16f">
+</p>
+
