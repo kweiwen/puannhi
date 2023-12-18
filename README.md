@@ -5,9 +5,9 @@ Shoutout to Professor Sebastian J. Schlecht!
 Whenever my colleagues or music-friends ask how I created such a cool effect, I tell them that I met the "Gulu of Reverb" and drew the most of my inspiration from this paper: 
 > Schlecht, Sebastian J and Habets, Emanuël A P, *Time-varying feedback matrices in feedback delay networks and their application in artificial reverberation*, Journal of the Acoustical Society of America, 2015.
 
-$\mathbf{A(n)}$: The feedback **matrix** itself. It changes over time, whic is denoted by the index $n$. 
+$\mathbf{A}(n)$: The feedback **matrix** itself. It changes over time, whic is denoted by the index $n$. 
 
-$\mathbf{A(0)}$: This is the initial feedback **matrix**. Serving as the starting point for the time-variant modulation process. Chosen to be a unitary matrix
+$\mathbf{A}(0)$: This is the initial feedback **matrix**. Serving as the starting point for the time-variant modulation process. Chosen to be a unitary matrix
 
 $\mathbf{U}$: Unitary matrix.
 
@@ -19,8 +19,8 @@ If we assume there are 4 delay lines in the implementation, $\mathbf{U}$ is a Ha
 
 $$
 \begin{align}
-A(n) &= A(0) \mathbf{U} K^{\Phi(n)} \mathbf{U}^H \\
-     &= A(0) \left( \frac{1}{2} \begin{bmatrix} 
+\mathbf{A}(n) &= \mathbf{A}(0) \mathbf{U} \Uplambda^{\Phi(n)} \mathbf{U}^H \\
+              &= \mathbf{A}(0) \left( \frac{1}{2} \begin{bmatrix} 
 1 & 1 & 1 & 1 \\ 
 1 & -1 & 1 & -1 \\ 
 1 & 1 & -1 & -1 \\ 
